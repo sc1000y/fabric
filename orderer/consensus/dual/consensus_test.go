@@ -70,6 +70,14 @@ func TestCompare(t *testing.T) {
 	CompareToOppsite(1, 5)
 }
 
+func TestOrdererInfo(t *testing.T) {
+	var info *ordererInfo = new(ordererInfo)
+	info.credit = 1
+	info.isPrimary = true
+	info.seralizeID = 1
+	fmt.Println(info)
+}
+
 // This test checks that if consenter is halted before a timer fires, nothing is actually written.
 func TestHaltBeforeTimeout(t *testing.T) {
 	fmt.Println("run test")

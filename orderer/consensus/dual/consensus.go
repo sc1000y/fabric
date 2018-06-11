@@ -40,6 +40,7 @@ type chain struct {
 	support  consensus.ConsenterSupport
 	sendChan chan *message
 	exitChan chan struct{}
+	oinfo    ordererInfo
 }
 
 type message struct {
