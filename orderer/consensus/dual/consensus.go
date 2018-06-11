@@ -47,6 +47,7 @@ type message struct {
 	configSeq uint64
 	normalMsg *cb.Envelope
 	configMsg *cb.Envelope
+	haltMsg   *cb.Envelope //dual message
 }
 
 // New creates a new consenter for the solo consensus scheme.
@@ -125,6 +126,11 @@ type ordererInfo struct {
 	seralizeID int
 }
 
+//NewOrdererInfo is for new an ordererinfo
+func NewOrdererInfo(credit myCredit, isPrimary bool, seralizeID int) ordererInfo {
+	return ordererInfo{credit, isPrimary, seralizeID}
+}
+
 //type isPrimary bool
 
 //CalculateCredit to result
@@ -132,15 +138,34 @@ func CalculateCredit(credit myCredit) myCredit {
 	credit++
 	return credit
 }
+func SendHaltMSG() {
+	//TODO
+
+}
+func CheckIfHalt(haltMsg *cb.Envelope) bool {
+	var haltFlag = false
+	//TODO
+	return haltFlag
+}
 
 //CompareToOppsite to define who is better
-func CompareToOppsite(creditMine myCredit, creditOppsite myCredit) {
-	var isPrimary bool = false
-	if creditMine > creditOppsite {
+func CompareToOppsite(oinfoMine ordererInfo, oinfoOpposite ordererInfo) ordererInfo {
+	var isPrimary = false
+	if oinfoMine.credit > oinfoOpposite.credit {
 		isPrimary = true
 	}
+	if oinfoMine.credit == oinfoOpposite.credit {
+		if oinfoMine.seralizeID > oinfoOpposite.seralizeID {
+			isPrimary = true
+		}
+	}
+	oinfoMine.isPrimary = isPrimary
+	oinfoOpposite.isPrimary = (!isPrimary)
 	fmt.Println("Am I primary", isPrimary)
+	return oinfoMine
+
 }
+
 func (ch *chain) main() {
 	var timer <-chan time.Time
 	var err error
@@ -150,7 +175,7 @@ func (ch *chain) main() {
 		err = nil
 		select {
 		case msg := <-ch.sendChan:
-			if msg.configMsg == nil {
+			if msg.configMsg == nil && msg.normalMsg != nil {
 				// NormalMsg
 				if msg.configSeq < seq {
 					_, err = ch.support.ProcessNormalMsg(msg.normalMsg)
@@ -167,11 +192,13 @@ func (ch *chain) main() {
 				for _, batch := range batches {
 					block := ch.support.CreateNextBlock(batch)
 					ch.support.WriteBlock(block, nil)
+
 				}
+				SendHaltMSG()
 				if len(batches) > 0 {
 					timer = nil
 				}
-			} else {
+			} else if msg.configMsg != nil {
 				// ConfigMsg
 				if msg.configSeq < seq {
 					msg.configMsg, _, err = ch.support.ProcessConfigMsg(msg.configMsg)
@@ -189,6 +216,12 @@ func (ch *chain) main() {
 				block := ch.support.CreateNextBlock([]*cb.Envelope{msg.configMsg})
 				ch.support.WriteConfigBlock(block, nil)
 				timer = nil
+			} else {
+				//haltMsg
+				if CheckIfHalt(msg.haltMsg) {
+					timer = nil //halt the next block create
+				}
+
 			}
 		case <-timer:
 			//clear the timer
@@ -202,6 +235,7 @@ func (ch *chain) main() {
 			logger.Debugf("Batch timer expired, creating block")
 			block := ch.support.CreateNextBlock(batch)
 			ch.support.WriteBlock(block, nil)
+			SendHaltMSG() //send halt msg to halt block create
 		case <-ch.exitChan:
 			logger.Debugf("Exiting")
 			return

@@ -67,11 +67,23 @@ func TestCredit(t *testing.T) {
 	fmt.Println("result is :", cre)
 }
 func TestCompare(t *testing.T) {
-	CompareToOppsite(1, 5)
+	var info = ordererInfo{
+		credit:     3,
+		isPrimary:  true,
+		seralizeID: 1,
+	}
+
+	var info2 = ordererInfo{
+		credit:     1,
+		isPrimary:  true,
+		seralizeID: 2,
+	}
+
+	CompareToOppsite(info, info2)
 }
 
 func TestOrdererInfo(t *testing.T) {
-	var info *ordererInfo = new(ordererInfo)
+	var info = new(ordererInfo)
 	info.credit = 1
 	info.isPrimary = true
 	info.seralizeID = 1
