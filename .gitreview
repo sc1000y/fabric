@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
 [gerrit]
-host=gerrit.hyperledger.org
+host=github.com/sc1000y/fabric
 port=29418
 project=fabric

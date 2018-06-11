@@ -13,6 +13,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/hyperledger/fabric/orderer/consensus/dual"
+
 	"github.com/hyperledger/fabric/common/channelconfig"
 	"github.com/hyperledger/fabric/common/crypto"
 	"github.com/hyperledger/fabric/common/flogging"
@@ -254,6 +256,8 @@ func initializeMultichannelRegistrar(conf *localconfig.TopLevel, signer crypto.L
 
 	consenters := make(map[string]consensus.Consenter)
 	consenters["solo"] = solo.New()
+	// add new consensus
+	consenters["dual"] = dual.New()
 	consenters["kafka"] = kafka.New(conf.Kafka)
 
 	return multichannel.NewRegistrar(lf, consenters, signer, callbacks...)
