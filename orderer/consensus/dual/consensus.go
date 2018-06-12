@@ -148,6 +148,11 @@ func CheckIfHalt(haltMsg *cb.Envelope) bool {
 	return haltFlag
 }
 
+//calcuating the speculation time of when the message will put into chain, and send to all network
+func preOnChainNotice() {
+	//TODO
+}
+
 //CompareToOppsite to define who is better
 func CompareToOppsite(oinfoMine ordererInfo, oinfoOpposite ordererInfo) ordererInfo {
 	var isPrimary = false
@@ -184,6 +189,7 @@ func (ch *chain) main() {
 						continue
 					}
 				}
+				preOnChainNotice()
 				batches, _ := ch.support.BlockCutter().Ordered(msg.normalMsg)
 				if len(batches) == 0 && timer == nil {
 					timer = time.After(ch.support.SharedConfig().BatchTimeout())
