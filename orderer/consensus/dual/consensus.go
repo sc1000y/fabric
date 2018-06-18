@@ -18,6 +18,7 @@ package dual
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/hyperledger/fabric/common/flogging"
@@ -45,9 +46,9 @@ type chain struct {
 
 type message struct {
 	configSeq uint64
-	normalMsg *cb.Envelope
+	normalMsg *cb.Envelope "github.com/hyperledger/fabric/peer/common/broadcastclient"
 	configMsg *cb.Envelope
-	haltMsg   *cb.Envelope //dual message
+	haltMsg   string // *cb.Envelope //dual message
 }
 
 // New creates a new consenter for the solo consensus scheme.
@@ -138,8 +139,16 @@ func CalculateCredit(credit myCredit) myCredit {
 	credit++
 	return credit
 }
-func SendHaltMSG() {
+func SendHaltMSG(message *message) {
 	//TODO
+	//seq = ch.support.Sequence()
+	var seq = message.configSeq
+	var haltMsg = "halt" + strconv.Itoa(int(seq)) + "msg"
+	//var message = message{seq, nil, nil, haltMsg}
+	//msg := <-ch.sendChan
+	message.haltMsg = haltMsg
+	//ch.sendChan <- msg
+	//GetBroadcastClient()
 
 }
 func CheckIfHalt(haltMsg *cb.Envelope) bool {
@@ -177,6 +186,7 @@ func (ch *chain) main() {
 
 	for {
 		seq := ch.support.Sequence()
+
 		err = nil
 		select {
 		case msg := <-ch.sendChan:
@@ -200,7 +210,10 @@ func (ch *chain) main() {
 					ch.support.WriteBlock(block, nil)
 
 				}
-				SendHaltMSG()
+
+				SendHaltMSG(msg)
+				ch.sendChan <- msg
+
 				if len(batches) > 0 {
 					timer = nil
 				}
@@ -224,9 +237,9 @@ func (ch *chain) main() {
 				timer = nil
 			} else {
 				//haltMsg
-				if CheckIfHalt(msg.haltMsg) {
-					timer = nil //halt the next block create
-				}
+				//if CheckIfHalt(msg.haltMsg) {
+				//	timer = nil //halt the next block create
+				//}
 
 			}
 		case <-timer:
@@ -241,7 +254,9 @@ func (ch *chain) main() {
 			logger.Debugf("Batch timer expired, creating block")
 			block := ch.support.CreateNextBlock(batch)
 			ch.support.WriteBlock(block, nil)
-			SendHaltMSG() //send halt msg to halt block create
+
+			//SendHaltMSG(msg)
+			//ch.sendChan <- msg
 		case <-ch.exitChan:
 			logger.Debugf("Exiting")
 			return
