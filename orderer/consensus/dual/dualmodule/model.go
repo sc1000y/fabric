@@ -9,10 +9,24 @@ import (
 
 func main() {
 	fmt.Println("hello world . 你好 世界！")
-	//var chain = newChain()
+	/*var chain = newChain()
 	//var waitQ = make(chan bool)
-	//go peer(chain)
-	//go orderer(chain)
+	const producerCount int = 5           // 生产者数量
+	const consumerCount int = 2           // 消费者数量
+	var producers [producerCount]peers    // 生产者数组
+	var consumers [consumerCount]orderers // 消费者数组
+	for i := 0; i < producerCount; i++ {
+		producers[i] = peers{i} // 初始化生产者id和Level
+		go producers[i].peer(chain)
+	}
+	for i := 0; i < consumerCount; i++ {
+		var primaryFlag = false
+		if i == 0 {
+			primaryFlag = true
+		}
+		consumers[i] = orderers{10, primaryFlag, i} // 初始化生产者id和Level
+		go consumers[i].orderer(chain)
+	}*/
 
 }
 
@@ -20,7 +34,7 @@ func newChain() *chain {
 	return &chain{
 		//support:  support,
 		sendChan: make(chan *message, 10),
-		exitChan: make(chan struct{}),
+		exitChan: make(chan bool),
 	}
 }
 
@@ -28,13 +42,16 @@ type peers struct {
 	id int
 }
 type orderers struct {
-	id int
+	credit     int
+	isPrimary  bool
+	seralizeID int
+	//mockBlockChain string
 }
 
 func peerBehavior(ch *chain, msg *message) {
 	ch.sendChan <- msg
 }
-func (p peers) peer(ch *chain, waitQ chan bool) {
+func (p peers) peer(ch *chain) {
 	var msg *message = new(message)
 	//msg.configSeq = 1
 	msg.normalMsg = "normalMsg"
@@ -42,53 +59,69 @@ func (p peers) peer(ch *chain, waitQ chan bool) {
 	msg.haltMsg = "haltMsg"
 	//send msg into channel
 	for a := 0; a < 10; a++ {
-		time.Sleep(time.Millisecond * 150)
+		//time.Sleep(time.Millisecond * 150)
 		msg.configSeq = a
-		msg.normalMsg = msg.normalMsg + strconv.Itoa(a)
-		msg.configMsg = msg.configMsg + strconv.Itoa(a)
-		sleepTime := rand.Intn(1000) + 1000
+		msg.normalMsg = "normalMsg" + strconv.Itoa(a) + "from" + strconv.Itoa(p.id)
+		msg.configMsg = "configMsg" + strconv.Itoa(a) + "from" + strconv.Itoa(p.id)
+		sleepTime := rand.Intn(100) + 100
 		time.Sleep(time.Millisecond * time.Duration(sleepTime))
-		ch.sendChan <- msg
+		peerBehavior(ch, msg)
 	}
-	//ch.exitChan <-
-	//ch.sendChan <- msg
-	waitQ <- true
+	ch.exitChan <- true
+
 }
+
 func ordererBehavior(msg *message) {
 	//msg := <-ch.sendChan
+	fmt.Println("write to block:")
 	fmt.Println(msg)
 }
-func (o orderers) orderer(ch *chain, waitQ chan bool) {
+func (o orderers) orderer(ch *chain) {
 	for {
 		select {
 
 		case msg := <-ch.sendChan:
-			fmt.Println("ok")
-			ordererBehavior(msg)
-			waitQ <- true
-			sleepTime := rand.Intn(1000) + 2000
-			time.Sleep(time.Millisecond * time.Duration(sleepTime))
-		default:
-			fmt.Print("nothing in channel")
+			//fmt.Println("ok")
+			//fmt.Println(msg)
+			if msg.haltMsg == "haltMsg" {
+				mockWriteToBlock(msg)
+				msg.haltMsg = "halt this!"
+				ch.sendChan <- msg
+				//sleepTime := rand.Intn(100) + 200
+				//time.Sleep(time.Millisecond * time.Duration(sleepTime))
+			} else {
+				fmt.Println("eject msg:")
+				fmt.Println(msg)
+			}
+
+		case <-ch.exitChan:
+			fmt.Println(strconv.Itoa(o.seralizeID) + "exit")
+			ch.exitChan <- true
+			return
+
+			//fmt.Print(".")
 		}
 	}
+}
+func mockWriteToBlock(msg *message) {
+	fmt.Println(msg)
 }
 
 type message struct {
 	configSeq int
-	normalMsg string
-	configMsg string
+	normalMsg string // *cb.Envelope
+	configMsg string // *cb.Envelope
 	haltMsg   string // *cb.Envelope //dual message
 }
 type chain struct {
 	//support  consensus.ConsenterSupport
 	sendChan chan *message
-	exitChan chan struct{}
+	exitChan chan bool //struct{}
 	oinfo    ordererInfo
 }
 type myCredit int
 type ordererInfo struct {
-	credit     myCredit
+	credit     int
 	isPrimary  bool
 	seralizeID int
 }
