@@ -34,7 +34,12 @@ import (
 
 }/*/
 func Test2(t *testing.T) {
-	var prim = orderers{10, true, 1, 10, false}
+	var prim = orderers{10, true, 1, 400, false}
+	var backup = orderers{10, false, 2, 5, false}
+	behavior(5, prim, backup)
+}
+func Test3(t *testing.T) {
+	var prim = orderers{10, true, 1, 400, true} //byzantine peer
 	var backup = orderers{10, false, 2, 5, false}
 	behavior(5, prim, backup)
 }

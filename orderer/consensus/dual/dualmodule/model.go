@@ -1,7 +1,6 @@
 package main
 
 import (
-	"container/list"
 	"fmt"
 	"math/rand"
 	"strconv"
@@ -79,6 +78,11 @@ func (p peers) peer(ch *chain, ch2 *chain) {
 		time.Sleep(time.Millisecond * time.Duration(sleepTime))
 		peerBehavior(ch, msg)
 		peerBehavior(ch2, msg)
+		/*if ch.oinfo.isPrimary {
+			if ch.oinfo.credit < ch2.oinfo.credit {
+				//ch.oinfo.isPrimary:= <- false
+			}
+		}*/
 	}
 	ch.exitChan <- true
 
@@ -89,9 +93,27 @@ func ordererBehavior(msg *message) {
 	fmt.Println("write to block:")
 	fmt.Println(msg)
 }
+func CompareToOppsite(oinfoMine ordererInfo, oinfoOpposite ordererInfo) ordererInfo {
+	var isPrimary = false
+	if oinfoMine.credit > oinfoOpposite.credit {
+		isPrimary = true
+	}
+	if oinfoMine.credit == oinfoOpposite.credit {
+		if oinfoMine.seralizeID > oinfoOpposite.seralizeID {
+			isPrimary = true
+		}
+	}
+	oinfoMine.isPrimary = isPrimary
+	oinfoOpposite.isPrimary = (!isPrimary)
+	fmt.Println("Am I primary", isPrimary)
+	return oinfoMine
+
+}
 func (o orderers) orderer(ch *chain, oc *orderchain) {
 	var timer <-chan time.Time
-	batch := list.New()
+	var batch []*message
+	//batch.Init
+
 	for {
 		if o.isPrimary {
 			select {
@@ -100,6 +122,13 @@ func (o orderers) orderer(ch *chain, oc *orderchain) {
 				fmt.Println("write to block:")
 				fmt.Println(msg)
 				oc.writtenChan <- msg
+				if o.mockByzatine {
+					sleepTime := rand.Intn(o.mockLag) + o.mockLag*rand.Intn(o.mockLag)
+					time.Sleep(time.Millisecond * time.Duration(sleepTime))
+				} else {
+					sleepTime := rand.Intn(o.mockLag) + o.mockLag
+					time.Sleep(time.Millisecond * time.Duration(sleepTime))
+				}
 
 			case <-ch.exitChan:
 				fmt.Println(strconv.Itoa(o.seralizeID) + "exit")
@@ -111,16 +140,47 @@ func (o orderers) orderer(ch *chain, oc *orderchain) {
 			select {
 			case msg := <-ch.sendChan:
 				timer = time.After(time.Second * 2)
-				batch.PushBack(msg)
-			case preonmsg := <-oc.preOnChan:
-				fmt.Println(preonmsg)
+				batch = append(batch, msg)
+				sleepTime := rand.Intn(o.mockLag) + o.mockLag
+				time.Sleep(time.Millisecond * time.Duration(sleepTime))
+			//case preonmsg := <-oc.preOnChan:
+			//fmt.Println(preonmsg)
 			case writtenmsg := <-oc.writtenChan:
-				fmt.Println(writtenmsg)
-				for e := batch.Front(); e != nil; e = e.Next() {
-					//printe.Value
-					fmt.Println(e.Value)
+				fmt.Println("read from oc:")
+
+				for k, v := range batch {
+
+					if v.normalMsg == writtenmsg.normalMsg && v.configSeq == writtenmsg.configSeq {
+						fmt.Print("delete from batch")
+						batch = append(batch[:k], batch[k+1:]...)
+						break
+					}
 				}
+				/*for e := batch.Front(); e != nil; e = e.Next() {
+					//printe.Value
+					if e.Value.(message).normalMsg == writtenmsg.normalMsg {
+						batch.Remove(e)
+						timer = time.After(time.Second * 2)
+					}
+					//fmt.Println(e.Value)
+
+				}*/
 			case <-timer:
+				if len(batch) > 0 {
+					for _, v := range batch {
+						fmt.Println("written by backup service")
+						fmt.Println(v)
+					}
+				}
+
+				/*if batch {
+					for e := batch.Front(); e != nil; e = e.Next() {
+						fmt.Println("written by backup service")
+						fmt.Println(e.Value)
+						o.credit++
+					}
+				}*/
+
 			}
 		}
 
@@ -224,7 +284,7 @@ type chain struct {
 	sendChan    chan *message
 	writtenChan chan *message
 	exitChan    chan bool //struct{}
-	oinfo       ordererInfo
+	oinfo       *ordererInfo
 }
 type myCredit int
 type ordererInfo struct {
