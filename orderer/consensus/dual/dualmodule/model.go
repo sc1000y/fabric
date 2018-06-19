@@ -1,6 +1,7 @@
 package main
 
 import (
+	"container/list"
 	"fmt"
 	"math/rand"
 	"strconv"
@@ -33,8 +34,16 @@ func main() {
 func newChain() *chain {
 	return &chain{
 		//support:  support,
-		sendChan: make(chan *message, 10),
-		exitChan: make(chan bool),
+		sendChan:    make(chan *message, 10),
+		writtenChan: make(chan *message, 10),
+		exitChan:    make(chan bool),
+	}
+}
+func newOrderChain() *orderchain {
+	return &orderchain{
+		writtenChan: make(chan *message, 10),
+		preOnChan:   make(chan *message, 10),
+		exitChan:    make(chan bool),
 	}
 }
 
@@ -42,30 +51,34 @@ type peers struct {
 	id int
 }
 type orderers struct {
-	credit     int
-	isPrimary  bool
-	seralizeID int
+	credit       int
+	isPrimary    bool
+	seralizeID   int
+	mockLag      int
+	mockByzatine bool
 	//mockBlockChain string
 }
 
 func peerBehavior(ch *chain, msg *message) {
 	ch.sendChan <- msg
 }
-func (p peers) peer(ch *chain) {
+func (p peers) peer(ch *chain, ch2 *chain) {
 	var msg *message = new(message)
 	//msg.configSeq = 1
-	msg.normalMsg = "normalMsg"
-	msg.configMsg = "configMsg"
-	msg.haltMsg = "haltMsg"
+	//msg.normalMsg = "normalMsg"
+	//msg.configMsg = "configMsg"
+	//msg.haltMsg = "haltMsg"
 	//send msg into channel
 	for a := 0; a < 10; a++ {
 		//time.Sleep(time.Millisecond * 150)
 		msg.configSeq = a
 		msg.normalMsg = "normalMsg" + strconv.Itoa(a) + "from" + strconv.Itoa(p.id)
 		msg.configMsg = "configMsg" + strconv.Itoa(a) + "from" + strconv.Itoa(p.id)
+		msg.haltMsg = "haltMsg"
 		sleepTime := rand.Intn(100) + 100
 		time.Sleep(time.Millisecond * time.Duration(sleepTime))
 		peerBehavior(ch, msg)
+		peerBehavior(ch2, msg)
 	}
 	ch.exitChan <- true
 
@@ -76,24 +89,112 @@ func ordererBehavior(msg *message) {
 	fmt.Println("write to block:")
 	fmt.Println(msg)
 }
-func (o orderers) orderer(ch *chain) {
+func (o orderers) orderer(ch *chain, oc *orderchain) {
+	var timer <-chan time.Time
+	batch := list.New()
+	for {
+		if o.isPrimary {
+			select {
+			case msg := <-ch.sendChan:
+
+				fmt.Println("write to block:")
+				fmt.Println(msg)
+				oc.writtenChan <- msg
+
+			case <-ch.exitChan:
+				fmt.Println(strconv.Itoa(o.seralizeID) + "exit")
+				ch.exitChan <- true
+				return
+
+			}
+		} else {
+			select {
+			case msg := <-ch.sendChan:
+				timer = time.After(time.Second * 2)
+				batch.PushBack(msg)
+			case preonmsg := <-oc.preOnChan:
+				fmt.Println(preonmsg)
+			case writtenmsg := <-oc.writtenChan:
+				fmt.Println(writtenmsg)
+				for e := batch.Front(); e != nil; e = e.Next() {
+					//printe.Value
+					fmt.Println(e.Value)
+				}
+			case <-timer:
+			}
+		}
+
+	}
+}
+
+/*func (o orderers) orderer(ch *chain, oc *orderchain) {
+	var timer <-chan time.Time
+	var batch map[int]*message
+	fmt.Println("seralize " + strconv.Itoa(o.seralizeID) + " is online")
+	//var err error
 	for {
 		select {
 
 		case msg := <-ch.sendChan:
 			//fmt.Println("ok")
 			//fmt.Println(msg)
-			if msg.haltMsg == "haltMsg" {
-				mockWriteToBlock(msg)
-				msg.haltMsg = "halt this!"
-				ch.sendChan <- msg
-				//sleepTime := rand.Intn(100) + 200
-				//time.Sleep(time.Millisecond * time.Duration(sleepTime))
-			} else {
-				fmt.Println("eject msg:")
-				fmt.Println(msg)
-			}
+			if o.isPrimary == true { //primary orderer service behavior
+				if msg.haltMsg == "haltMsg" {
+					//mockWriteToBlock(msg)
+					fmt.Println("write to block by " + strconv.Itoa(o.seralizeID))
+					fmt.Println(msg)
+					msg.haltMsg = "halt this!"
+					//ch.writtenChan <- msg
+					oc.writtenChan <- msg
+					//o.credit++
+					sleepTime := rand.Intn(o.mockLag) + o.mockLag
+					time.Sleep(time.Millisecond * time.Duration(sleepTime))
+				} else {
+					fmt.Println("eject msg by " + strconv.Itoa(o.seralizeID))
+					fmt.Println(msg)
+				}
 
+			}
+			if o.isPrimary == false { // backup service behavior
+				if msg.haltMsg == "haltMsg" {
+					//batch[] += msg
+					batch[msg.configSeq] = msg
+					timer := time.After(time.Second * 5)
+					fmt.Println("timer out start on " + strconv.Itoa(o.seralizeID))
+					fmt.Println(msg)
+					select {
+					case <-timer:
+
+						fmt.Println("write to block by backup service:")
+						fmt.Println(msg)
+					}
+					/*select {
+					case <-timer.C: //time out
+					case hltMsg := <-ch.writtenChan:
+						fmt.println(hltMsg.configSeq)
+						fmt.Println("write to block by backup service:")
+						fmt.Println(msg)
+						msg.haltMsg = "halt this!"
+						ch.sendChan <- msg
+						//sleepTime := rand.Intn(o.mockLag) + o.mockLag
+						//time.Sleep(time.Millisecond * time.Duration(sleepTime))
+					}
+
+					//mockWriteToBlock(msg)
+
+					//sleepTime := rand.Intn(100) + 200
+					//time.Sleep(time.Millisecond * time.Duration(sleepTime))
+				} else {
+					fmt.Println("eject msg by backup service:")
+					fmt.Println(msg)
+				}
+			}
+		case hltMsg := <-ch.writtenChan:
+			fmt.Println("msg is already written on chain")
+			fmt.Println(hltMsg)
+			timer = nil
+		case <-timer:
+			fmt.Println("time out")
 		case <-ch.exitChan:
 			fmt.Println(strconv.Itoa(o.seralizeID) + "exit")
 			ch.exitChan <- true
@@ -102,11 +203,16 @@ func (o orderers) orderer(ch *chain) {
 			//fmt.Print(".")
 		}
 	}
-}
+}*/
 func mockWriteToBlock(msg *message) {
 	fmt.Println(msg)
 }
 
+type orderchain struct {
+	writtenChan chan *message
+	preOnChan   chan *message
+	exitChan    chan bool
+}
 type message struct {
 	configSeq int
 	normalMsg string // *cb.Envelope
@@ -115,9 +221,10 @@ type message struct {
 }
 type chain struct {
 	//support  consensus.ConsenterSupport
-	sendChan chan *message
-	exitChan chan bool //struct{}
-	oinfo    ordererInfo
+	sendChan    chan *message
+	writtenChan chan *message
+	exitChan    chan bool //struct{}
+	oinfo       ordererInfo
 }
 type myCredit int
 type ordererInfo struct {
