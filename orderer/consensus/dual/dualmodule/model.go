@@ -87,7 +87,28 @@ func (p peers) peer(ch *chain, ch2 *chain) {
 	ch.exitChan <- true
 
 }
-
+func increase(blockheight int, ordererCredit int) float64 {
+	var newCredit float64 = 0
+	var alpha = 1
+	var theta = 0.5
+	newCredit = newCredit + float64(alpha)*(1-(float64(ordererCredit)/float64(blockheight)))
+	newCredit = float64(ordererCredit) + theta*newCredit
+	return newCredit
+}
+func decrease(blockheight int, ordererCredit int) float64 {
+	var newCredit float64 = 0
+	var alpha = 0.6
+	var theta = 0.3
+	//var beta = 2.0
+	//var min = 0.0
+	newCredit = newCredit + float64(alpha)*(1-(float64(ordererCredit)/float64(blockheight)))
+	newCredit = float64(ordererCredit) + theta*newCredit
+	//newCredit = float64(ordererCredit) - (1-theta)*beta*newCredit
+	/*if newCredit < min {
+		newCredit = min
+	}*/
+	return newCredit
+}
 func ordererBehavior(msg *message) {
 	//msg := <-ch.sendChan
 	fmt.Println("write to block:")

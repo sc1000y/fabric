@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -39,9 +40,31 @@ func Test2(t *testing.T) {
 	behavior(5, prim, backup)
 }
 func Test3(t *testing.T) {
-	var prim = orderers{10, true, 1, 400, true} //byzantine peer
+	var prim = orderers{10, true, 1, 100, true} //byzantine peer
 	var backup = orderers{10, false, 2, 5, false}
 	behavior(5, prim, backup)
+}
+func TestCalculate(t *testing.T) {
+	var height = 15
+	var credit = 10
+	fmt.Println(increase(height, credit))
+	height = 20
+	credit = 10
+	fmt.Println(increase(height, credit))
+	height = 50
+	credit = 15
+	fmt.Println(increase(height, credit))
+}
+func TestDecrease(t *testing.T) {
+	var height = 150
+	var credit = 50
+	fmt.Println(decrease(height, credit))
+	height = 500
+	credit = 80
+	fmt.Println(decrease(height, credit))
+	height = 500
+	credit = 105
+	fmt.Println(decrease(height, credit))
 }
 func behavior(peerNum int, prim orderers, backup orderers) {
 	var chain = newChain()
