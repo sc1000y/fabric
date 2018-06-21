@@ -34,6 +34,11 @@ import (
 	}
 
 }/*/
+func Test1(t *testing.T) {
+	var prim = orderers{10, true, 1, 4, false}
+	var backup = orderers{10, false, 2, 5, false}
+	behavior(5, prim, backup)
+}
 func Test2(t *testing.T) {
 	var prim = orderers{10, true, 1, 400, false}
 	var backup = orderers{10, false, 2, 5, false}
@@ -46,30 +51,42 @@ func Test3(t *testing.T) {
 }
 func TestCalculate(t *testing.T) {
 	var height = 15
-	var credit = 10
+	var credit = 10.0
 	fmt.Println(increase(height, credit))
 	height = 20
-	credit = 10
+	credit = 10.0
 	fmt.Println(increase(height, credit))
 	height = 50
-	credit = 15
+	credit = 15.0
+	fmt.Println(increase(height, credit))
+	height = 80
+	credit = 15.0
+	fmt.Println(increase(height, credit))
+	height = 150
+	credit = 15.0
+	fmt.Println(increase(height, credit))
+	height = 500
+	credit = 20.0
 	fmt.Println(increase(height, credit))
 }
 func TestDecrease(t *testing.T) {
 	var height = 150
-	var credit = 50
+	var credit = 50.0
 	fmt.Println(decrease(height, credit))
 	height = 500
-	credit = 80
+	credit = 80.0
 	fmt.Println(decrease(height, credit))
 	height = 500
-	credit = 105
+	credit = 105.0
 	fmt.Println(decrease(height, credit))
 }
 func behavior(peerNum int, prim orderers, backup orderers) {
 	var chain = newChain()
 	var chain2 = newChain()
 	var oc = newOrderChain()
+	//curCookies
+	//init()
+	//init()
 	var producers [10]peers // 生产者数组S
 	//var consumers [2]orderers // 消费者数组
 	for i := 0; i < peerNum; i++ {
@@ -79,7 +96,8 @@ func behavior(peerNum int, prim orderers, backup orderers) {
 	go prim.orderer(chain, oc)
 	go backup.orderer(chain2, oc)
 	for i := 0; i < (peerNum); i++ {
-		print(i)
+		println("curcookie is", curCookies)
+		println(i)
 		<-chain.exitChan // 等待所有生产者和消费者结束退出
 	}
 }

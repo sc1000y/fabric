@@ -50,7 +50,7 @@ type peers struct {
 	id int
 }
 type orderers struct {
-	credit       int
+	credit       float64
 	isPrimary    bool
 	seralizeID   int
 	mockLag      int
@@ -87,7 +87,7 @@ func (p peers) peer(ch *chain, ch2 *chain) {
 	ch.exitChan <- true
 
 }
-func increase(blockheight int, ordererCredit int) float64 {
+func increase(blockheight int, ordererCredit float64) float64 {
 	var newCredit float64 = 0
 	var alpha = 1
 	var theta = 0.5
@@ -95,7 +95,7 @@ func increase(blockheight int, ordererCredit int) float64 {
 	newCredit = float64(ordererCredit) + theta*newCredit
 	return newCredit
 }
-func decrease(blockheight int, ordererCredit int) float64 {
+func decrease(blockheight int, ordererCredit float64) float64 {
 	var newCredit float64 = 0
 	var alpha = 0.6
 	var theta = 0.3
@@ -136,12 +136,14 @@ func (o orderers) orderer(ch *chain, oc *orderchain) {
 	//batch.Init
 
 	for {
+		//var seq = 0 //ch.support.Sequence()
 		if o.isPrimary {
 			select {
 			case msg := <-ch.sendChan:
 
 				fmt.Println("write to block:")
 				fmt.Println(msg)
+				add()
 				oc.writtenChan <- msg
 				if o.mockByzatine {
 					sleepTime := rand.Intn(o.mockLag) + o.mockLag*rand.Intn(o.mockLag)
@@ -191,6 +193,8 @@ func (o orderers) orderer(ch *chain, oc *orderchain) {
 					for _, v := range batch {
 						fmt.Println("written by backup service")
 						fmt.Println(v)
+						add()
+						o.credit = increase(getHeight(), o.credit)
 					}
 				}
 
@@ -207,6 +211,33 @@ func (o orderers) orderer(ch *chain, oc *orderchain) {
 
 	}
 }
+
+/* Global Variables */
+var curCookies int
+
+//do some init for crifanLib
+func init() {
+	fmt.Println("init something")
+	curCookies = 0
+	return
+}
+func add() {
+	curCookies++
+}
+func getHeight() int {
+	return curCookies
+}
+
+/*func add(Set-Cookie) {
+	c1 := http.Cookie{
+		Name:     "first_cookie",
+		Value:    "vanyar",
+		HttpOnly: true,
+	}
+	http.SetCookie(w, &c1)
+	//http.SetCookie
+	//curCookies[0] = curCookies[0] + 1
+}*/
 
 /*func (o orderers) orderer(ch *chain, oc *orderchain) {
 	var timer <-chan time.Time
@@ -293,6 +324,7 @@ type orderchain struct {
 	writtenChan chan *message
 	preOnChan   chan *message
 	exitChan    chan bool
+	blockheight int
 }
 type message struct {
 	configSeq int
@@ -307,7 +339,7 @@ type chain struct {
 	exitChan    chan bool //struct{}
 	oinfo       *ordererInfo
 }
-type myCredit int
+type myCredit float64
 type ordererInfo struct {
 	credit     int
 	isPrimary  bool
