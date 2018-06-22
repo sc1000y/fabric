@@ -1,0 +1,36 @@
+syntax = "proto3";
+package grpc;
+
+//option objc_class_prefix = "HLW";
+
+/*message HelloRequest {
+  string greeting = 1;
+}
+
+message HelloResponse {
+  string reply = 1;
+  repeated int32 number=4;
+}
+
+service HelloService {
+  rpc SayHello(HelloRequest) returns (HelloResponse){}
+}*/
+message PeerRequest {
+    string greeting = 1;
+  }
+message PeerInfoResponse{
+   int32 seralizedId=1;
+   float credit=2;
+   bool amIprimary=3;
+}
+message IwantToBePrimaryRequest{
+   int32 seralizedId=1;
+   float credit=2;
+}
+message IwantToBePrimaryResponse{
+  bool success=1;
+}
+service BackendService{
+   rpc getPeerInfo(PeerRequest) returns (PeerInfoResponse){}
+   rpc IwantoBePrimary(IwantToBePrimaryRequest) returns (IwantToBePrimaryResponse){}
+}
