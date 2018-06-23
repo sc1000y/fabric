@@ -1,7 +1,7 @@
 package main
 
 import (
-	"context"
+	"fmt"
 	"log"
 
 	pb "github.com/hyperledger/fabric/orderer/consensus/dual/grpc"
@@ -42,14 +42,5 @@ func main() {
 	defer conn.Close()
 
 	c := pb.NewBackendServiceClient(conn)
-
-	//name := defaultName
-	/*if len(os.Args) > 1 {
-		name = os.Args[1]
-	}*/
-	r, err := c.GetPeerInfo(context.Background(), &pb.PeerRequest{Greeting: "1"})
-	if err != nil {
-		log.Fatal("could not greet: %v", err)
-	}
-	log.Printf("response is: %f", r.Credit)
+	fmt.Println(c.GetPeerInfo)
 }
