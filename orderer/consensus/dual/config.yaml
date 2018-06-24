@@ -1,0 +1,14 @@
+#冒号后面一定要有空格
+#缩进要用空格
+primary:
+  credit: 10      
+  seralizeID: 1 
+  host: "127.0.0.1"
+  port: 52001
+backup:
+  credit: 10      
+  seralizeID: 2
+  host: "127.0.0.1"
+  port: 52002
+
+ 
