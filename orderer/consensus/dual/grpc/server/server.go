@@ -5,10 +5,11 @@ package main
 // server.go
 
 import (
-	"log"
 	"net"
 
+	"github.com/hyperledger/fabric/common/flogging"
 	pb "github.com/hyperledger/fabric/orderer/consensus/dual/grpc"
+	logging "github.com/op/go-logging"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -17,6 +18,13 @@ const (
 	port    = ":50051"
 	tstPort = ":50052"
 )
+const pkgLogID = "orderer/common/orderer/consensus/dual/grpc/server"
+
+var logger *logging.Logger
+
+func init() {
+	logger = flogging.MustGetLogger(pkgLogID)
+}
 
 type server struct{}
 
@@ -45,7 +53,7 @@ func main() {
 func start(port string) {
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
-		log.Fatal("failed to listen: %v", err)
+		logger.Fatal("failed to listen: %v", err)
 	}
 	s := grpc.NewServer()
 	//pb.RegisterHelloServiceServer(s, &server{})
