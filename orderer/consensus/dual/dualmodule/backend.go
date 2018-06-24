@@ -29,7 +29,17 @@ func (s *server) GetPeerInfo(ctx context.Context, in *pb.PeerRequest) (*pb.PeerI
 	return &pb.PeerInfoResponse{SeralizedId: 1, Credit: credit, AmIprimary: false}, nil
 }
 func (s *server) IwantoBePrimary(ctx context.Context, in *pb.IwantToBePrimaryRequest) (*pb.IwantToBePrimaryResponse, error) {
-	return &pb.IwantToBePrimaryResponse{Success: false}, nil
+	var suc = false
+	if in.Credit > float32(s.oinfo.credit) {
+		suc = true
+	}
+	if in.Credit == float32(s.oinfo.credit) && int(in.SeralizedId) < s.oinfo.seralizeID {
+		suc = true
+	}
+	if suc {
+		s.oinfo.isPrimary = !suc
+	}
+	return &pb.IwantToBePrimaryResponse{Success: suc}, nil
 }
 
 func start(port string, oinfo *orderers) {
