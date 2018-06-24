@@ -46,7 +46,12 @@ func Test1(t *testing.T) {
 	if err != nil {
 		logger.Fatal("could not greet: %v", err)
 	}
-	fmt.Printf("Greeting: %f", res.GetCredit())
+	fmt.Printf("Greeting from 1: %f", res.GetCredit())
+	res2, err2 := client("localhost:50052")
+	if err2 != nil {
+		logger.Fatal("could not greet: %v", err)
+	}
+	fmt.Printf("Greeting from 2: %f", res2.GetCredit())
 	//mockClient(address)
 }
 func Test2(t *testing.T) {
@@ -59,11 +64,16 @@ func Test3(t *testing.T) {
 	var backup = orderers{10, false, 2, 5, false}
 
 	behavior(5, prim, backup)
-	res, err := client("localhost:50052")
+	res, err := client(address)
 	if err != nil {
 		logger.Fatal("could not greet: %v", err)
 	}
-	fmt.Printf("Greeting: %f", res.GetCredit())
+	fmt.Printf("Greeting from 1: %f and primary is %t", res.GetCredit(), res.GetAmIprimary())
+	res2, err2 := client("localhost:50052")
+	if err2 != nil {
+		logger.Fatal("could not greet: %v", err)
+	}
+	fmt.Printf("Greeting from 2: %f and primary is %t", res2.GetCredit(), res2.GetAmIprimary())
 }
 func TestCalculate(t *testing.T) {
 	var height = 15

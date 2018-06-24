@@ -26,7 +26,7 @@ type server struct{ oinfo *orderers }
 func (s *server) GetPeerInfo(ctx context.Context, in *pb.PeerRequest) (*pb.PeerInfoResponse, error) {
 	var credit = float32(s.oinfo.credit)
 
-	return &pb.PeerInfoResponse{SeralizedId: 1, Credit: credit, AmIprimary: false}, nil
+	return &pb.PeerInfoResponse{SeralizedId: 1, Credit: credit, AmIprimary: s.oinfo.isPrimary}, nil
 }
 func (s *server) IwantoBePrimary(ctx context.Context, in *pb.IwantToBePrimaryRequest) (*pb.IwantToBePrimaryResponse, error) {
 	var suc = false
@@ -63,6 +63,22 @@ func client(address string) (*pb.PeerInfoResponse, error) {
 
 	c := pb.NewBackendServiceClient(conn)
 	r, err := c.GetPeerInfo(context.Background(), &pb.PeerRequest{Greeting: "1"})
+	if err != nil {
+		logger.Fatal("could not greet: %v", err)
+	}
+	return r, err
+}
+func bePrimary(address string, oinfo *orderers) (*pb.IwantToBePrimaryResponse, error) {
+
+	conn, err := grpc.Dial(address, grpc.WithInsecure())
+	if err != nil {
+		logger.Fatal("did not connect: %v", err)
+		//log.Fatalln("did not connect: %v", err)
+	}
+	defer conn.Close()
+
+	c := pb.NewBackendServiceClient(conn)
+	r, err := c.IwantoBePrimary(context.Background(), &pb.IwantToBePrimaryRequest{SeralizedId: int32(oinfo.seralizeID), Credit: float32(oinfo.credit)})
 	if err != nil {
 		logger.Fatal("could not greet: %v", err)
 	}

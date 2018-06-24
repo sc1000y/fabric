@@ -134,6 +134,7 @@ func CompareToOppsite(oinfoMine ordererInfo, oinfoOpposite ordererInfo) ordererI
 func (o orderers) orderer(ch *chain, oc *orderchain) {
 	var timer <-chan time.Time
 	var batch []*message
+	var count = 0
 	//batch.Init
 	go start(":5005"+strconv.Itoa(o.seralizeID), &o)
 	for {
@@ -144,7 +145,7 @@ func (o orderers) orderer(ch *chain, oc *orderchain) {
 
 				fmt.Println("write to block:")
 				fmt.Println(msg)
-				o.credit = increase(50, o.credit)
+				//o.credit = increase(50, o.credit)
 				//client("c")
 				oc.writtenChan <- msg
 				if o.mockByzatine {
@@ -197,7 +198,20 @@ func (o orderers) orderer(ch *chain, oc *orderchain) {
 						fmt.Println(v)
 						add()
 						o.credit = increase(getHeight(), o.credit)
+						count++
 					}
+
+				}
+				if count > 3 {
+					var res, err = bePrimary(":50051", &o) //testing
+					if err != nil {
+						logger.Fatal("could not greet: %v", err)
+					}
+					if res.GetSuccess() {
+						fmt.Println(" get primary by seralizeId ", o.seralizeID)
+						o.isPrimary = true
+					}
+
 				}
 
 				/*if batch {
@@ -227,7 +241,7 @@ func add() {
 	curCookies++
 }
 func getHeight() int {
-	return curCookies
+	return 50 //testing
 }
 
 /*func add(Set-Cookie) {
