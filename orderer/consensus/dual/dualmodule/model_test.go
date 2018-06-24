@@ -39,9 +39,14 @@ import (
 
 }/*/
 func Test1(t *testing.T) {
-	var prim = orderers{10, true, 1, 4, false}
+	var prim = orderers{16, true, 1, 4, false}
 	var backup = orderers{10, false, 2, 5, false}
 	behavior(5, prim, backup)
+	res, err := client(address)
+	if err != nil {
+		logger.Fatal("could not greet: %v", err)
+	}
+	fmt.Printf("Greeting: %f", res.GetCredit())
 	//mockClient(address)
 }
 func Test2(t *testing.T) {
@@ -52,7 +57,13 @@ func Test2(t *testing.T) {
 func Test3(t *testing.T) {
 	var prim = orderers{10, true, 1, 100, true} //byzantine peer
 	var backup = orderers{10, false, 2, 5, false}
+
 	behavior(5, prim, backup)
+	res, err := client("localhost:50052")
+	if err != nil {
+		logger.Fatal("could not greet: %v", err)
+	}
+	fmt.Printf("Greeting: %f", res.GetCredit())
 }
 func TestCalculate(t *testing.T) {
 	var height = 15

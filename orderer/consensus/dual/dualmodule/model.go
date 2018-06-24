@@ -144,7 +144,8 @@ func (o orderers) orderer(ch *chain, oc *orderchain) {
 
 				fmt.Println("write to block:")
 				fmt.Println(msg)
-				add()
+				o.credit = increase(50, o.credit)
+				//client("c")
 				oc.writtenChan <- msg
 				if o.mockByzatine {
 					sleepTime := rand.Intn(o.mockLag) + o.mockLag*rand.Intn(o.mockLag)
