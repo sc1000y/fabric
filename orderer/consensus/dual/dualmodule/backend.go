@@ -52,6 +52,17 @@ func start(port string, oinfo *orderers) {
 	pb.RegisterBackendServiceServer(s, &server{oinfo})
 	s.Serve(lis)
 }
+func _client(address string) pb.BackendServiceClient {
+	conn, err := grpc.Dial(address, grpc.WithInsecure())
+	if err != nil {
+		logger.Fatal("did not connect: %v", err)
+		//log.Fatalln("did not connect: %v", err)
+	}
+	defer conn.Close()
+
+	c := pb.NewBackendServiceClient(conn)
+	return c
+}
 func client(address string) (*pb.PeerInfoResponse, error) {
 
 	conn, err := grpc.Dial(address, grpc.WithInsecure())
