@@ -21,6 +21,7 @@ const (
 func TestStart(t *testing.T) {
 	var mockLag = 100
 	go start(port)
+
 	sleepTime := rand.Intn(mockLag)
 	time.Sleep(time.Millisecond * time.Duration(sleepTime))
 	mockClient()

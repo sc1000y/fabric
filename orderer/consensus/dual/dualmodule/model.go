@@ -68,6 +68,7 @@ func (p peers) peer(ch *chain, ch2 *chain) {
 	//msg.configMsg = "configMsg"
 	//msg.haltMsg = "haltMsg"
 	//send msg into channel
+
 	for a := 0; a < 10; a++ {
 		//time.Sleep(time.Millisecond * 150)
 		msg.configSeq = a
@@ -134,7 +135,7 @@ func (o orderers) orderer(ch *chain, oc *orderchain) {
 	var timer <-chan time.Time
 	var batch []*message
 	//batch.Init
-
+	go start(":5005"+strconv.Itoa(o.seralizeID), &o)
 	for {
 		//var seq = 0 //ch.support.Sequence()
 		if o.isPrimary {

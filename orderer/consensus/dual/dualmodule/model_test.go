@@ -1,8 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"testing"
+
+	pb "github.com/hyperledger/fabric/orderer/consensus/dual/grpc"
+	"google.golang.org/grpc"
 )
 
 /*func Test1(t *testing.T) {
@@ -38,6 +42,7 @@ func Test1(t *testing.T) {
 	var prim = orderers{10, true, 1, 4, false}
 	var backup = orderers{10, false, 2, 5, false}
 	behavior(5, prim, backup)
+	//mockClient(address)
 }
 func Test2(t *testing.T) {
 	var prim = orderers{10, true, 1, 400, false}
@@ -100,4 +105,27 @@ func behavior(peerNum int, prim orderers, backup orderers) {
 		println(i)
 		<-chain.exitChan // 等待所有生产者和消费者结束退出
 	}
+
+}
+
+const (
+	address = "localhost:50051"
+)
+
+func mockClient(address string) {
+
+	conn, err := grpc.Dial(address, grpc.WithInsecure())
+	if err != nil {
+		logger.Fatal("did not connect: %v", err)
+		//log.Fatalln("did not connect: %v", err)
+	}
+	defer conn.Close()
+
+	c := pb.NewBackendServiceClient(conn)
+	r, err := c.GetPeerInfo(context.Background(), &pb.PeerRequest{Greeting: "1"})
+	if err != nil {
+		logger.Fatal("could not greet: %v", err)
+	}
+	fmt.Printf("Greeting: %f", r.GetCredit())
+
 }
