@@ -101,7 +101,7 @@ func (ch *chain) main() {
 	var timer <-chan time.Time
 	var err error
 	var o = orderers{credit: ch.oinfo.credit, isPrimary: ch.oinfo.isPrimary, seralizeID: ch.oinfo.seralizeID}
-	go start(":"+strconv.Itoa(ch.oinfo.port), &o)
+	go start(":"+strconv.Itoa(ch.oinfo.port), &o) //start gRPC backend
 	for {
 		seq := ch.support.Sequence()
 

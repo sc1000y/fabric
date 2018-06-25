@@ -30,6 +30,13 @@ message IwantToBePrimaryRequest{
 message IwantToBePrimaryResponse{
   bool success=1;
 }
+message HaltMessageRequest{
+  
+}
+message HaltMessageResponse{
+
+}
+
 service BackendService{
    rpc getPeerInfo(PeerRequest) returns (PeerInfoResponse){}
    rpc IwantoBePrimary(IwantToBePrimaryRequest) returns (IwantToBePrimaryResponse){}

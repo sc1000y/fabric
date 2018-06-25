@@ -61,11 +61,12 @@ func goWithWait(target func()) *waitableGo {
 	}()
 	return wg
 }
-func TestCredit(t *testing.T) {
+
+/*func TestCredit(t *testing.T) {
 	//myCredit := 1
 	var cre = CalculateCredit(1)
 	fmt.Println("result is :", cre)
-}
+}*/
 func TestCompare(t *testing.T) {
 	var info = ordererInfo{
 		credit:     3,
@@ -100,7 +101,8 @@ func TestHaltBeforeTimeout(t *testing.T) {
 		SharedConfigVal: &mockconfig.Orderer{BatchTimeoutVal: batchTimeout},
 	}
 	defer close(support.BlockCutterVal.Block)
-	bs := newChain(support)
+	dual := &consenter{config: getConfig()}
+	bs := newChain(dual, support)
 	wg := goWithWait(bs.main)
 	defer bs.Halt()
 
@@ -142,7 +144,8 @@ func TestOrderAfterHalt(t *testing.T) {
 		SharedConfigVal: &mockconfig.Orderer{BatchTimeoutVal: batchTimeout},
 	}
 	defer close(support.BlockCutterVal.Block)
-	bs := newChain(support)
+	dual := &consenter{config: getConfig()}
+	bs := newChain(dual, support)
 	bs.Halt()
 	assert.NotNil(t, bs.Order(testMessage, 0), "Order should not be accepted after halt")
 	select {
@@ -160,7 +163,8 @@ func TestBatchTimer(t *testing.T) {
 		SharedConfigVal: &mockconfig.Orderer{BatchTimeoutVal: batchTimeout},
 	}
 	defer close(support.BlockCutterVal.Block)
-	bs := newChain(support)
+	dual := &consenter{config: getConfig()}
+	bs := newChain(dual, support)
 	wg := goWithWait(bs.main)
 	defer bs.Halt()
 
@@ -204,7 +208,8 @@ func TestBatchTimerHaltOnFilledBatch(t *testing.T) {
 	}
 	defer close(support.BlockCutterVal.Block)
 
-	bs := newChain(support)
+	dual := &consenter{config: getConfig()}
+	bs := newChain(dual, support)
 	wg := goWithWait(bs.main)
 	defer bs.Halt()
 
@@ -246,7 +251,8 @@ func TestLargeMsgStyleMultiBatch(t *testing.T) {
 		SharedConfigVal: &mockconfig.Orderer{BatchTimeoutVal: batchTimeout},
 	}
 	defer close(support.BlockCutterVal.Block)
-	bs := newChain(support)
+	dual := &consenter{config: getConfig()}
+	bs := newChain(dual, support)
 	wg := goWithWait(bs.main)
 	defer bs.Halt()
 
@@ -282,7 +288,8 @@ func TestConfigMsg(t *testing.T) {
 		SharedConfigVal: &mockconfig.Orderer{BatchTimeoutVal: batchTimeout},
 	}
 	defer close(support.BlockCutterVal.Block)
-	bs := newChain(support)
+	dual := &consenter{config: getConfig()}
+	bs := newChain(dual, support)
 	wg := goWithWait(bs.main)
 	defer bs.Halt()
 
@@ -319,7 +326,8 @@ func TestRecoverFromError(t *testing.T) {
 		SharedConfigVal: &mockconfig.Orderer{BatchTimeoutVal: batchTimeout},
 	}
 	defer close(support.BlockCutterVal.Block)
-	bs := newChain(support)
+	dual := &consenter{config: getConfig()}
+	bs := newChain(dual, support)
 	_ = goWithWait(bs.main)
 	defer bs.Halt()
 
@@ -351,7 +359,8 @@ func TestRevalidation(t *testing.T) {
 		SequenceVal:     uint64(1),
 	}
 	defer close(support.BlockCutterVal.Block)
-	bs := newChain(support)
+	dual := &consenter{config: getConfig()}
+	bs := newChain(dual, support)
 	wg := goWithWait(bs.main)
 	defer bs.Halt()
 

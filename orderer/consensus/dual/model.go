@@ -8,3 +8,8 @@ type orderers struct {
 	//mockByzatine bool
 	//mockBlockChain string
 }
+type orderchain struct {
+	writtenChan chan *message
+	preOnChan   chan *message
+	exitChan    chan bool
+}
