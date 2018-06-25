@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"github.com/hyperledger/fabric/common/flogging"
-	"github.com/hyperledger/fabric/orderer/consensus"
 	cb "github.com/hyperledger/fabric/protos/common"
 	"github.com/op/go-logging"
 )
@@ -35,100 +34,18 @@ func init() {
 	logger = flogging.MustGetLogger(pkgLogID)
 }
 
-type consenter struct{}
-
-type chain struct {
-	support  consensus.ConsenterSupport
-	sendChan chan *message
-	exitChan chan struct{}
-	oinfo    ordererInfo
-}
-
-type message struct {
-	configSeq uint64
-	normalMsg *cb.Envelope "github.com/hyperledger/fabric/peer/common/broadcastclient"
-	configMsg *cb.Envelope
-	haltMsg   string // *cb.Envelope //dual message
-}
-
-// New creates a new consenter for the solo consensus scheme.
-// The solo consensus scheme is very simple, and allows only one consenter for a given chain (this process).
-// It accepts messages being delivered via Order/Configure, orders them, and then uses the blockcutter to form the messages
-// into blocks before writing to the given ledger
-func New() consensus.Consenter {
-	return &consenter{}
-}
-
-func (solo *consenter) HandleChain(support consensus.ConsenterSupport, metadata *cb.Metadata) (consensus.Chain, error) {
-	return newChain(support), nil
-}
-
-func newChain(support consensus.ConsenterSupport) *chain {
-	return &chain{
-		support:  support,
-		sendChan: make(chan *message),
-		exitChan: make(chan struct{}),
-	}
-}
-
-func (ch *chain) Start() {
-	go ch.main()
-}
-
-func (ch *chain) Halt() {
-	select {
-	case <-ch.exitChan:
-		// Allow multiple halts without panic
-	default:
-		close(ch.exitChan)
-	}
-}
-
-func (ch *chain) WaitReady() error {
-	return nil
-}
-
-// Order accepts normal messages for ordering
-func (ch *chain) Order(env *cb.Envelope, configSeq uint64) error {
-	select {
-	case ch.sendChan <- &message{
-		configSeq: configSeq,
-		normalMsg: env,
-	}:
-		return nil
-	case <-ch.exitChan:
-		return fmt.Errorf("Exiting")
-	}
-}
-
-// Configure accepts configuration update messages for ordering
-func (ch *chain) Configure(config *cb.Envelope, configSeq uint64) error {
-	select {
-	case ch.sendChan <- &message{
-		configSeq: configSeq,
-		configMsg: config,
-	}:
-		return nil
-	case <-ch.exitChan:
-		return fmt.Errorf("Exiting")
-	}
-}
-
-// Errored only closes on exit
-func (ch *chain) Errored() <-chan struct{} {
-	return ch.exitChan
-}
-
 //credit for oderer peers
-type myCredit int
+
 type ordererInfo struct {
-	credit     myCredit
+	credit     float64
 	isPrimary  bool
 	seralizeID int
+	port       int
+	host       string
 }
 
 //NewOrdererInfo is for new an ordererinfo
-func NewOrdererInfo(credit myCredit, isPrimary bool, seralizeID int) ordererInfo {
+/*func NewOrdererInfo(credit myCredit, isPrimary bool, seralizeID int) ordererInfo {
 	return ordererInfo{credit, isPrimary, seralizeID}
 }
 
@@ -138,7 +55,7 @@ func NewOrdererInfo(credit myCredit, isPrimary bool, seralizeID int) ordererInfo
 func CalculateCredit(credit myCredit) myCredit {
 	credit++
 	return credit
-}
+}*/
 func SendHaltMSG(message *message) {
 	//TODO
 	//seq = ch.support.Sequence()
@@ -183,7 +100,8 @@ func CompareToOppsite(oinfoMine ordererInfo, oinfoOpposite ordererInfo) ordererI
 func (ch *chain) main() {
 	var timer <-chan time.Time
 	var err error
-
+	var o = orderers{credit: ch.oinfo.credit, isPrimary: ch.oinfo.isPrimary, seralizeID: ch.oinfo.seralizeID}
+	go start(":"+strconv.Itoa(ch.oinfo.port), &o)
 	for {
 		seq := ch.support.Sequence()
 

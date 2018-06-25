@@ -210,6 +210,7 @@ func (o orderers) orderer(ch *chain, oc *orderchain) {
 					if res.GetSuccess() {
 						fmt.Println(" get primary by seralizeId ", o.seralizeID)
 						o.isPrimary = true
+						count = 0
 					}
 
 				}

@@ -75,6 +75,11 @@ func Test3(t *testing.T) {
 	}
 	fmt.Printf("Greeting from 2: %f and primary is %t", res2.GetCredit(), res2.GetAmIprimary())
 }
+func TestCalculate2(t *testing.T) {
+	var height = 50
+	var credit = 10.0
+	fmt.Println(increase(height, credit))
+}
 func TestCalculate(t *testing.T) {
 	var height = 15
 	var credit = 10.0

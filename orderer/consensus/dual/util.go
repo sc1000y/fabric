@@ -10,16 +10,17 @@ import (
 
 //"github.com/hyperledger/fabric/core/util" struct 结构体必须大写
 type oinfoCfg struct {
-	Credit     int    `yaml:"credit"`
-	SeralizeID int    `yaml:"seralizeID"`
-	Host       string `yaml:"host"`
-	Port       int    `yaml:"port"`
+	Credit     float64 `yaml:"credit"`
+	SeralizeID int     `yaml:"seralizeID"`
+	Host       string  `yaml:"host"`
+	Port       int     `yaml:"port"`
 }
 
 //ChannelCfg is config from config.yaml
 type ChannelCfg struct {
-	Priamy oinfoCfg `yaml:"primary"`
-	Backup oinfoCfg `yaml:"backup"`
+	IsPrimary bool     `yaml:"isPrimary"`
+	Priamy    oinfoCfg `yaml:"primary"`
+	Backup    oinfoCfg `yaml:"backup"`
 }
 
 func getConfig() ChannelCfg {

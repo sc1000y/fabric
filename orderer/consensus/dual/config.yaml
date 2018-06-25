@@ -1,5 +1,6 @@
 #冒号后面一定要有空格
 #缩进要用空格
+isPrimary: true
 primary:
   credit: 10      
   seralizeID: 1 
