@@ -216,7 +216,8 @@ func NewOrdererGroup(conf *genesisconfig.Orderer) (*cb.ConfigGroup, error) {
 	}
 
 	switch conf.OrdererType {
-	case ConsensusTypeSolo:
+	case ConsensusTypeSolo:// do nothing
+	case ConsensusTypeDual:// do nothing
 	case ConsensusTypeKafka:
 		addValue(ordererGroup, channelconfig.KafkaBrokersValue(conf.Kafka.Brokers), channelconfig.AdminsPolicyKey)
 	default:
