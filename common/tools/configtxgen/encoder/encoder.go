@@ -44,6 +44,8 @@ const (
 	ConsensusTypeSolo = "solo"
 	// ConsensusTypeKafka identifies the Kafka-based consensus implementation.
 	ConsensusTypeKafka = "kafka"
+	// ConsensusTypeKafka identifies the Kafka-based consensus implementation.
+	ConsensusTypeDual = "dual"
 
 	// BlockValidationPolicyKey TODO
 	BlockValidationPolicyKey = "BlockValidation"
