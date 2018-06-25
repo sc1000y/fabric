@@ -101,7 +101,8 @@ func (ch *chain) main() {
 	var timer <-chan time.Time
 	var err error
 	var o = orderers{credit: ch.oinfo.credit, isPrimary: ch.oinfo.isPrimary, seralizeID: ch.oinfo.seralizeID}
-	go start(":"+strconv.Itoa(ch.oinfo.port), &o) //start gRPC backend
+	var oc = newOrderChain()
+	go start(":"+strconv.Itoa(ch.oinfo.port), &o, oc) //start gRPC backend
 	for {
 		seq := ch.support.Sequence()
 
@@ -117,6 +118,8 @@ func (ch *chain) main() {
 						continue
 					}
 				}
+				//msg.configMsg.String
+				//cb.Envelope()
 				preOnChainNotice()
 				batches, _ := ch.support.BlockCutter().Ordered(msg.normalMsg)
 				if len(batches) == 0 && timer == nil {

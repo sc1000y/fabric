@@ -1,5 +1,7 @@
 syntax = "proto3";
 package grpc;
+import "github.com/hyperledger/fabric/protos/common";
+
 
 //option objc_class_prefix = "HLW";
 
@@ -15,6 +17,15 @@ message HelloResponse {
 service HelloService {
   rpc SayHello(HelloRequest) returns (HelloResponse){}
 }*/
+// Envelope wraps a Payload with a signature so that the message may be authenticated
+message Envelope {
+  // A marshaled Payload
+  bytes payload = 1;
+
+  // A signature by the creator specified in the Payload header
+  bytes signature = 2;
+}
+
 message PeerRequest {
     string greeting = 1;
   }
@@ -31,12 +42,41 @@ message IwantToBePrimaryResponse{
   bool success=1;
 }
 message HaltMessageRequest{
-  
+  Envelope msg=1;
 }
 message HaltMessageResponse{
+  bool success=1;
+}
+message SendChainMessageRequest{
 
 }
+message SendChainMessageResponse{
+  bool success=1;
+}
+message SendChainReadMessageRequest{
 
+}
+message SendChainReadMessageResponse{
+  bool success=1;
+}
+message WrittenChainMessageRequest{
+  
+}
+message WrittenChainMessageResponse{
+  bool success=1;
+}
+message WrittenChainReadMessageRequest{
+
+}
+message WrittenChainReadMessageResponse{
+  bool success=1;
+}
+message PreOnChainRequest{
+
+}
+message PreOnChainResponse{
+  bool success=1;
+}
 service BackendService{
    rpc getPeerInfo(PeerRequest) returns (PeerInfoResponse){}
    rpc IwantoBePrimary(IwantToBePrimaryRequest) returns (IwantToBePrimaryResponse){}

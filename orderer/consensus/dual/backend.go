@@ -13,7 +13,10 @@ func init() {
 	logger = flogging.MustGetLogger(pkgLogID)
 }
 
-type server struct{ oinfo *orderers }
+type server struct {
+	oinfo *orderers
+	oc    *orderchain
+}
 
 func (s *server) GetPeerInfo(ctx context.Context, in *pb.PeerRequest) (*pb.PeerInfoResponse, error) {
 	var credit = float32(s.oinfo.credit)
@@ -34,7 +37,7 @@ func (s *server) IwantoBePrimary(ctx context.Context, in *pb.IwantToBePrimaryReq
 	return &pb.IwantToBePrimaryResponse{Success: suc}, nil
 }
 
-func start(port string, oinfo *orderers) {
+func start(port string, oinfo *orderers, oc *orderchain) {
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		logger.Fatal("failed to listen: %v", err)
@@ -42,8 +45,9 @@ func start(port string, oinfo *orderers) {
 	s := grpc.NewServer()
 	//oinfo orderers:={Credit:oinfoCfg.Credit,isPrimary:oinfoCfg.}
 	//pb.RegisterHelloServiceServer(s, &server{})
-	pb.RegisterBackendServiceServer(s, &server{oinfo})
+	pb.RegisterBackendServiceServer(s, &server{oinfo, oc})
 	s.Serve(lis)
+
 }
 func _client(address string) pb.BackendServiceClient {
 	conn, err := grpc.Dial(address, grpc.WithInsecure())

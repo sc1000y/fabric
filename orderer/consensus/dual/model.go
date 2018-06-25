@@ -13,3 +13,11 @@ type orderchain struct {
 	preOnChan   chan *message
 	exitChan    chan bool
 }
+
+func newOrderChain() *orderchain {
+	return &orderchain{
+		writtenChan: make(chan *message, 10),
+		preOnChan:   make(chan *message, 10),
+		exitChan:    make(chan bool),
+	}
+}

@@ -202,7 +202,7 @@ func (o orderers) orderer(ch *chain, oc *orderchain) {
 					}
 
 				}
-				if count > 3 {
+				if count > getHeight()%round(o.credit) {
 					var res, err = bePrimary(":50051", &o) //testing
 					if err != nil {
 						logger.Fatal("could not greet: %v", err)
@@ -227,6 +227,12 @@ func (o orderers) orderer(ch *chain, oc *orderchain) {
 		}
 
 	}
+}
+func round(val float64) int {
+	if val < 0 {
+		return int(val - 0.5)
+	}
+	return int(val + 0.5)
 }
 
 /* Global Variables */
