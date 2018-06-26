@@ -17,6 +17,9 @@ type server struct {
 	oinfo *orderers
 	oc    *orderchain
 }
+type clients struct {
+	c pb.BackendServiceClient
+}
 
 func (s *server) GetPeerInfo(ctx context.Context, in *pb.PeerRequest) (*pb.PeerInfoResponse, error) {
 	var credit = float32(s.oinfo.credit)
@@ -36,7 +39,18 @@ func (s *server) IwantoBePrimary(ctx context.Context, in *pb.IwantToBePrimaryReq
 	}
 	return &pb.IwantToBePrimaryResponse{Success: suc}, nil
 }
-
+func (s *server) SendChainMessage(ctx context.Context, in *pb.Envelope) (*pb.SendChainMessageResponse, error) {
+	var success = false
+	s.oc.preOnChan <- in
+	success = true
+	return &pb.SendChainMessageResponse{Success: success}, nil
+}
+func (s *server) WrittenChainMessage(ctx context.Context, in *pb.Envelope) (*pb.WrittenChainMessageResponse, error) {
+	var success = false
+	s.oc.writtenChan <- in
+	success = true
+	return &pb.WrittenChainMessageResponse{Success: success}, nil
+}
 func start(port string, oinfo *orderers, oc *orderchain) {
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
@@ -49,7 +63,33 @@ func start(port string, oinfo *orderers, oc *orderchain) {
 	s.Serve(lis)
 
 }
-func _client(address string) pb.BackendServiceClient {
+func intClient(address string) clients {
+	conn, err := grpc.Dial(address, grpc.WithInsecure())
+	if err != nil {
+		logger.Fatal("did not connect: %v", err)
+		//log.Fatalln("did not connect: %v", err)
+	}
+	defer conn.Close()
+
+	cl := pb.NewBackendServiceClient(conn)
+	return clients{c: cl}
+}
+func (c *clients) SendChain(in *pb.Envelope) bool {
+	r, err := c.c.SendChainMessage(context.Background(), in)
+	if err != nil {
+		logger.Fatal("could not greet: %v", err)
+	}
+	return r.GetSuccess()
+}
+func (c *clients) WrittenChain(in *pb.Envelope) bool {
+	r, err := c.c.WrittenChainMessage(context.Background(), in)
+	if err != nil {
+		logger.Fatal("could not greet: %v", err)
+	}
+	return r.GetSuccess()
+}
+
+/*func (c *client) _client(address string) pb.BackendServiceClient {
 	conn, err := grpc.Dial(address, grpc.WithInsecure())
 	if err != nil {
 		logger.Fatal("did not connect: %v", err)
@@ -59,7 +99,7 @@ func _client(address string) pb.BackendServiceClient {
 
 	c := pb.NewBackendServiceClient(conn)
 	return c
-}
+}*/
 func client(address string) (*pb.PeerInfoResponse, error) {
 
 	conn, err := grpc.Dial(address, grpc.WithInsecure())

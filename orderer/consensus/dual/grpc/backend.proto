@@ -1,8 +1,7 @@
 syntax = "proto3";
 package grpc;
-import "github.com/hyperledger/fabric/protos/common";
 
-
+// generate :protoc --go_out=plugins=grpc:. *.proto
 //option objc_class_prefix = "HLW";
 
 /*message HelloRequest {
@@ -25,7 +24,6 @@ message Envelope {
   // A signature by the creator specified in the Payload header
   bytes signature = 2;
 }
-
 message PeerRequest {
     string greeting = 1;
   }
@@ -48,31 +46,31 @@ message HaltMessageResponse{
   bool success=1;
 }
 message SendChainMessageRequest{
-
+  Envelope env=1;
 }
 message SendChainMessageResponse{
   bool success=1;
 }
-message SendChainReadMessageRequest{
-
+/*message SendChainReadMessageRequest{
+  Envelope env=1;
 }
 message SendChainReadMessageResponse{
   bool success=1;
-}
+}*/
 message WrittenChainMessageRequest{
-  
+  Envelope env=1;
 }
 message WrittenChainMessageResponse{
   bool success=1;
 }
-message WrittenChainReadMessageRequest{
-
+/*message WrittenChainReadMessageRequest{
+  Envelope env=1;
 }
 message WrittenChainReadMessageResponse{
   bool success=1;
-}
+}*/
 message PreOnChainRequest{
-
+  Envelope env=1;
 }
 message PreOnChainResponse{
   bool success=1;
@@ -80,4 +78,7 @@ message PreOnChainResponse{
 service BackendService{
    rpc getPeerInfo(PeerRequest) returns (PeerInfoResponse){}
    rpc IwantoBePrimary(IwantToBePrimaryRequest) returns (IwantToBePrimaryResponse){}
+   rpc SendChainMessage(Envelope) returns(SendChainMessageResponse){}
+   rpc WrittenChainMessage(Envelope) returns(WrittenChainMessageResponse){}
+
 }

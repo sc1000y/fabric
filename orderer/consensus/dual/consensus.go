@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/hyperledger/fabric/common/flogging"
+	pb "github.com/hyperledger/fabric/orderer/consensus/dual/grpc"
 	cb "github.com/hyperledger/fabric/protos/common"
 	"github.com/op/go-logging"
 )
@@ -96,13 +97,32 @@ func CompareToOppsite(oinfoMine ordererInfo, oinfoOpposite ordererInfo) ordererI
 	return oinfoMine
 
 }
+func makeEnvelope(in *cb.Envelope) *pb.Envelope {
+	return &pb.Envelope{Payload: in.GetPayload(), Signature: in.GetSignature()}
+}
 
+/*func checkEnvelope(in *cb.Envelope, c *pb.Envelope) bool {
+	success := false
+
+	if in.Payload() == c.GetPayload() && in.Signature() == c.GetSignature() {
+		success = true
+	}
+	return success
+}*/
 func (ch *chain) main() {
 	var timer <-chan time.Time
 	var err error
 	var o = orderers{credit: ch.oinfo.credit, isPrimary: ch.oinfo.isPrimary, seralizeID: ch.oinfo.seralizeID}
 	var oc = newOrderChain()
 	go start(":"+strconv.Itoa(ch.oinfo.port), &o, oc) //start gRPC backend
+	var addr = ""
+	if o.isPrimary {
+		addr = ch.config.Backup.Host + ":" + strconv.Itoa(ch.config.Backup.Port)
+	} else {
+
+		addr = ch.config.Priamy.Host + ":" + strconv.Itoa(ch.config.Priamy.Port)
+	}
+	client := intClient(addr) //need to be sync
 	for {
 		seq := ch.support.Sequence()
 
@@ -120,6 +140,7 @@ func (ch *chain) main() {
 				}
 				//msg.configMsg.String
 				//cb.Envelope()
+
 				preOnChainNotice()
 				batches, _ := ch.support.BlockCutter().Ordered(msg.normalMsg)
 				if len(batches) == 0 && timer == nil {
@@ -132,7 +153,8 @@ func (ch *chain) main() {
 
 				}
 
-				SendHaltMSG(msg)
+				client.SendChain(makeEnvelope(msg.normalMsg))
+				//SendHaltMSG(msg)
 				ch.sendChan <- msg
 
 				if len(batches) > 0 {

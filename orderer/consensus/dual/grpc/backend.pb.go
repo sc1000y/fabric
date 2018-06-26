@@ -23,18 +23,55 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
-// message HelloRequest {
-// string greeting = 1;
-// }
-//
-// message HelloResponse {
-// string reply = 1;
-// repeated int32 number=4;
-// }
-//
-// service HelloService {
-// rpc SayHello(HelloRequest) returns (HelloResponse){}
-// }
+// Envelope wraps a Payload with a signature so that the message may be authenticated
+type Envelope struct {
+	// A marshaled Payload
+	Payload []byte `protobuf:"bytes,1,opt,name=payload,proto3" json:"payload,omitempty"`
+	// A signature by the creator specified in the Payload header
+	Signature            []byte   `protobuf:"bytes,2,opt,name=signature,proto3" json:"signature,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Envelope) Reset()         { *m = Envelope{} }
+func (m *Envelope) String() string { return proto.CompactTextString(m) }
+func (*Envelope) ProtoMessage()    {}
+func (*Envelope) Descriptor() ([]byte, []int) {
+	return fileDescriptor_backend_7f52c4b3a4b31eb6, []int{0}
+}
+func (m *Envelope) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Envelope.Unmarshal(m, b)
+}
+func (m *Envelope) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Envelope.Marshal(b, m, deterministic)
+}
+func (dst *Envelope) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Envelope.Merge(dst, src)
+}
+func (m *Envelope) XXX_Size() int {
+	return xxx_messageInfo_Envelope.Size(m)
+}
+func (m *Envelope) XXX_DiscardUnknown() {
+	xxx_messageInfo_Envelope.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Envelope proto.InternalMessageInfo
+
+func (m *Envelope) GetPayload() []byte {
+	if m != nil {
+		return m.Payload
+	}
+	return nil
+}
+
+func (m *Envelope) GetSignature() []byte {
+	if m != nil {
+		return m.Signature
+	}
+	return nil
+}
+
 type PeerRequest struct {
 	Greeting             string   `protobuf:"bytes,1,opt,name=greeting,proto3" json:"greeting,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -46,7 +83,7 @@ func (m *PeerRequest) Reset()         { *m = PeerRequest{} }
 func (m *PeerRequest) String() string { return proto.CompactTextString(m) }
 func (*PeerRequest) ProtoMessage()    {}
 func (*PeerRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_backend_d3c311b66966ebc3, []int{0}
+	return fileDescriptor_backend_7f52c4b3a4b31eb6, []int{1}
 }
 func (m *PeerRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_PeerRequest.Unmarshal(m, b)
@@ -86,7 +123,7 @@ func (m *PeerInfoResponse) Reset()         { *m = PeerInfoResponse{} }
 func (m *PeerInfoResponse) String() string { return proto.CompactTextString(m) }
 func (*PeerInfoResponse) ProtoMessage()    {}
 func (*PeerInfoResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_backend_d3c311b66966ebc3, []int{1}
+	return fileDescriptor_backend_7f52c4b3a4b31eb6, []int{2}
 }
 func (m *PeerInfoResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_PeerInfoResponse.Unmarshal(m, b)
@@ -139,7 +176,7 @@ func (m *IwantToBePrimaryRequest) Reset()         { *m = IwantToBePrimaryRequest
 func (m *IwantToBePrimaryRequest) String() string { return proto.CompactTextString(m) }
 func (*IwantToBePrimaryRequest) ProtoMessage()    {}
 func (*IwantToBePrimaryRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_backend_d3c311b66966ebc3, []int{2}
+	return fileDescriptor_backend_7f52c4b3a4b31eb6, []int{3}
 }
 func (m *IwantToBePrimaryRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_IwantToBePrimaryRequest.Unmarshal(m, b)
@@ -184,7 +221,7 @@ func (m *IwantToBePrimaryResponse) Reset()         { *m = IwantToBePrimaryRespon
 func (m *IwantToBePrimaryResponse) String() string { return proto.CompactTextString(m) }
 func (*IwantToBePrimaryResponse) ProtoMessage()    {}
 func (*IwantToBePrimaryResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_backend_d3c311b66966ebc3, []int{3}
+	return fileDescriptor_backend_7f52c4b3a4b31eb6, []int{4}
 }
 func (m *IwantToBePrimaryResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_IwantToBePrimaryResponse.Unmarshal(m, b)
@@ -211,11 +248,336 @@ func (m *IwantToBePrimaryResponse) GetSuccess() bool {
 	return false
 }
 
+type HaltMessageRequest struct {
+	Msg                  *Envelope `protobuf:"bytes,1,opt,name=msg,proto3" json:"msg,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
+	XXX_unrecognized     []byte    `json:"-"`
+	XXX_sizecache        int32     `json:"-"`
+}
+
+func (m *HaltMessageRequest) Reset()         { *m = HaltMessageRequest{} }
+func (m *HaltMessageRequest) String() string { return proto.CompactTextString(m) }
+func (*HaltMessageRequest) ProtoMessage()    {}
+func (*HaltMessageRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_backend_7f52c4b3a4b31eb6, []int{5}
+}
+func (m *HaltMessageRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_HaltMessageRequest.Unmarshal(m, b)
+}
+func (m *HaltMessageRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_HaltMessageRequest.Marshal(b, m, deterministic)
+}
+func (dst *HaltMessageRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_HaltMessageRequest.Merge(dst, src)
+}
+func (m *HaltMessageRequest) XXX_Size() int {
+	return xxx_messageInfo_HaltMessageRequest.Size(m)
+}
+func (m *HaltMessageRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_HaltMessageRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_HaltMessageRequest proto.InternalMessageInfo
+
+func (m *HaltMessageRequest) GetMsg() *Envelope {
+	if m != nil {
+		return m.Msg
+	}
+	return nil
+}
+
+type HaltMessageResponse struct {
+	Success              bool     `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *HaltMessageResponse) Reset()         { *m = HaltMessageResponse{} }
+func (m *HaltMessageResponse) String() string { return proto.CompactTextString(m) }
+func (*HaltMessageResponse) ProtoMessage()    {}
+func (*HaltMessageResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_backend_7f52c4b3a4b31eb6, []int{6}
+}
+func (m *HaltMessageResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_HaltMessageResponse.Unmarshal(m, b)
+}
+func (m *HaltMessageResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_HaltMessageResponse.Marshal(b, m, deterministic)
+}
+func (dst *HaltMessageResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_HaltMessageResponse.Merge(dst, src)
+}
+func (m *HaltMessageResponse) XXX_Size() int {
+	return xxx_messageInfo_HaltMessageResponse.Size(m)
+}
+func (m *HaltMessageResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_HaltMessageResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_HaltMessageResponse proto.InternalMessageInfo
+
+func (m *HaltMessageResponse) GetSuccess() bool {
+	if m != nil {
+		return m.Success
+	}
+	return false
+}
+
+type SendChainMessageRequest struct {
+	Env                  *Envelope `protobuf:"bytes,1,opt,name=env,proto3" json:"env,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
+	XXX_unrecognized     []byte    `json:"-"`
+	XXX_sizecache        int32     `json:"-"`
+}
+
+func (m *SendChainMessageRequest) Reset()         { *m = SendChainMessageRequest{} }
+func (m *SendChainMessageRequest) String() string { return proto.CompactTextString(m) }
+func (*SendChainMessageRequest) ProtoMessage()    {}
+func (*SendChainMessageRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_backend_7f52c4b3a4b31eb6, []int{7}
+}
+func (m *SendChainMessageRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_SendChainMessageRequest.Unmarshal(m, b)
+}
+func (m *SendChainMessageRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_SendChainMessageRequest.Marshal(b, m, deterministic)
+}
+func (dst *SendChainMessageRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SendChainMessageRequest.Merge(dst, src)
+}
+func (m *SendChainMessageRequest) XXX_Size() int {
+	return xxx_messageInfo_SendChainMessageRequest.Size(m)
+}
+func (m *SendChainMessageRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_SendChainMessageRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SendChainMessageRequest proto.InternalMessageInfo
+
+func (m *SendChainMessageRequest) GetEnv() *Envelope {
+	if m != nil {
+		return m.Env
+	}
+	return nil
+}
+
+type SendChainMessageResponse struct {
+	Success              bool     `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *SendChainMessageResponse) Reset()         { *m = SendChainMessageResponse{} }
+func (m *SendChainMessageResponse) String() string { return proto.CompactTextString(m) }
+func (*SendChainMessageResponse) ProtoMessage()    {}
+func (*SendChainMessageResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_backend_7f52c4b3a4b31eb6, []int{8}
+}
+func (m *SendChainMessageResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_SendChainMessageResponse.Unmarshal(m, b)
+}
+func (m *SendChainMessageResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_SendChainMessageResponse.Marshal(b, m, deterministic)
+}
+func (dst *SendChainMessageResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SendChainMessageResponse.Merge(dst, src)
+}
+func (m *SendChainMessageResponse) XXX_Size() int {
+	return xxx_messageInfo_SendChainMessageResponse.Size(m)
+}
+func (m *SendChainMessageResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_SendChainMessageResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SendChainMessageResponse proto.InternalMessageInfo
+
+func (m *SendChainMessageResponse) GetSuccess() bool {
+	if m != nil {
+		return m.Success
+	}
+	return false
+}
+
+// message SendChainReadMessageRequest{
+// Envelope env=1;
+// }
+// message SendChainReadMessageResponse{
+// bool success=1;
+// }
+type WrittenChainMessageRequest struct {
+	Env                  *Envelope `protobuf:"bytes,1,opt,name=env,proto3" json:"env,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
+	XXX_unrecognized     []byte    `json:"-"`
+	XXX_sizecache        int32     `json:"-"`
+}
+
+func (m *WrittenChainMessageRequest) Reset()         { *m = WrittenChainMessageRequest{} }
+func (m *WrittenChainMessageRequest) String() string { return proto.CompactTextString(m) }
+func (*WrittenChainMessageRequest) ProtoMessage()    {}
+func (*WrittenChainMessageRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_backend_7f52c4b3a4b31eb6, []int{9}
+}
+func (m *WrittenChainMessageRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_WrittenChainMessageRequest.Unmarshal(m, b)
+}
+func (m *WrittenChainMessageRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_WrittenChainMessageRequest.Marshal(b, m, deterministic)
+}
+func (dst *WrittenChainMessageRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_WrittenChainMessageRequest.Merge(dst, src)
+}
+func (m *WrittenChainMessageRequest) XXX_Size() int {
+	return xxx_messageInfo_WrittenChainMessageRequest.Size(m)
+}
+func (m *WrittenChainMessageRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_WrittenChainMessageRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_WrittenChainMessageRequest proto.InternalMessageInfo
+
+func (m *WrittenChainMessageRequest) GetEnv() *Envelope {
+	if m != nil {
+		return m.Env
+	}
+	return nil
+}
+
+type WrittenChainMessageResponse struct {
+	Success              bool     `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *WrittenChainMessageResponse) Reset()         { *m = WrittenChainMessageResponse{} }
+func (m *WrittenChainMessageResponse) String() string { return proto.CompactTextString(m) }
+func (*WrittenChainMessageResponse) ProtoMessage()    {}
+func (*WrittenChainMessageResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_backend_7f52c4b3a4b31eb6, []int{10}
+}
+func (m *WrittenChainMessageResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_WrittenChainMessageResponse.Unmarshal(m, b)
+}
+func (m *WrittenChainMessageResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_WrittenChainMessageResponse.Marshal(b, m, deterministic)
+}
+func (dst *WrittenChainMessageResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_WrittenChainMessageResponse.Merge(dst, src)
+}
+func (m *WrittenChainMessageResponse) XXX_Size() int {
+	return xxx_messageInfo_WrittenChainMessageResponse.Size(m)
+}
+func (m *WrittenChainMessageResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_WrittenChainMessageResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_WrittenChainMessageResponse proto.InternalMessageInfo
+
+func (m *WrittenChainMessageResponse) GetSuccess() bool {
+	if m != nil {
+		return m.Success
+	}
+	return false
+}
+
+// message WrittenChainReadMessageRequest{
+// Envelope env=1;
+// }
+// message WrittenChainReadMessageResponse{
+// bool success=1;
+// }
+type PreOnChainRequest struct {
+	Env                  *Envelope `protobuf:"bytes,1,opt,name=env,proto3" json:"env,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
+	XXX_unrecognized     []byte    `json:"-"`
+	XXX_sizecache        int32     `json:"-"`
+}
+
+func (m *PreOnChainRequest) Reset()         { *m = PreOnChainRequest{} }
+func (m *PreOnChainRequest) String() string { return proto.CompactTextString(m) }
+func (*PreOnChainRequest) ProtoMessage()    {}
+func (*PreOnChainRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_backend_7f52c4b3a4b31eb6, []int{11}
+}
+func (m *PreOnChainRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PreOnChainRequest.Unmarshal(m, b)
+}
+func (m *PreOnChainRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PreOnChainRequest.Marshal(b, m, deterministic)
+}
+func (dst *PreOnChainRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PreOnChainRequest.Merge(dst, src)
+}
+func (m *PreOnChainRequest) XXX_Size() int {
+	return xxx_messageInfo_PreOnChainRequest.Size(m)
+}
+func (m *PreOnChainRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_PreOnChainRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PreOnChainRequest proto.InternalMessageInfo
+
+func (m *PreOnChainRequest) GetEnv() *Envelope {
+	if m != nil {
+		return m.Env
+	}
+	return nil
+}
+
+type PreOnChainResponse struct {
+	Success              bool     `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *PreOnChainResponse) Reset()         { *m = PreOnChainResponse{} }
+func (m *PreOnChainResponse) String() string { return proto.CompactTextString(m) }
+func (*PreOnChainResponse) ProtoMessage()    {}
+func (*PreOnChainResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_backend_7f52c4b3a4b31eb6, []int{12}
+}
+func (m *PreOnChainResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PreOnChainResponse.Unmarshal(m, b)
+}
+func (m *PreOnChainResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PreOnChainResponse.Marshal(b, m, deterministic)
+}
+func (dst *PreOnChainResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PreOnChainResponse.Merge(dst, src)
+}
+func (m *PreOnChainResponse) XXX_Size() int {
+	return xxx_messageInfo_PreOnChainResponse.Size(m)
+}
+func (m *PreOnChainResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_PreOnChainResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PreOnChainResponse proto.InternalMessageInfo
+
+func (m *PreOnChainResponse) GetSuccess() bool {
+	if m != nil {
+		return m.Success
+	}
+	return false
+}
+
 func init() {
+	proto.RegisterType((*Envelope)(nil), "grpc.Envelope")
 	proto.RegisterType((*PeerRequest)(nil), "grpc.PeerRequest")
 	proto.RegisterType((*PeerInfoResponse)(nil), "grpc.PeerInfoResponse")
 	proto.RegisterType((*IwantToBePrimaryRequest)(nil), "grpc.IwantToBePrimaryRequest")
 	proto.RegisterType((*IwantToBePrimaryResponse)(nil), "grpc.IwantToBePrimaryResponse")
+	proto.RegisterType((*HaltMessageRequest)(nil), "grpc.HaltMessageRequest")
+	proto.RegisterType((*HaltMessageResponse)(nil), "grpc.HaltMessageResponse")
+	proto.RegisterType((*SendChainMessageRequest)(nil), "grpc.SendChainMessageRequest")
+	proto.RegisterType((*SendChainMessageResponse)(nil), "grpc.SendChainMessageResponse")
+	proto.RegisterType((*WrittenChainMessageRequest)(nil), "grpc.WrittenChainMessageRequest")
+	proto.RegisterType((*WrittenChainMessageResponse)(nil), "grpc.WrittenChainMessageResponse")
+	proto.RegisterType((*PreOnChainRequest)(nil), "grpc.PreOnChainRequest")
+	proto.RegisterType((*PreOnChainResponse)(nil), "grpc.PreOnChainResponse")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -232,6 +594,8 @@ const _ = grpc.SupportPackageIsVersion4
 type BackendServiceClient interface {
 	GetPeerInfo(ctx context.Context, in *PeerRequest, opts ...grpc.CallOption) (*PeerInfoResponse, error)
 	IwantoBePrimary(ctx context.Context, in *IwantToBePrimaryRequest, opts ...grpc.CallOption) (*IwantToBePrimaryResponse, error)
+	SendChainMessage(ctx context.Context, in *Envelope, opts ...grpc.CallOption) (*SendChainMessageResponse, error)
+	WrittenChainMessage(ctx context.Context, in *Envelope, opts ...grpc.CallOption) (*WrittenChainMessageResponse, error)
 }
 
 type backendServiceClient struct {
@@ -260,10 +624,30 @@ func (c *backendServiceClient) IwantoBePrimary(ctx context.Context, in *IwantToB
 	return out, nil
 }
 
+func (c *backendServiceClient) SendChainMessage(ctx context.Context, in *Envelope, opts ...grpc.CallOption) (*SendChainMessageResponse, error) {
+	out := new(SendChainMessageResponse)
+	err := c.cc.Invoke(ctx, "/grpc.BackendService/SendChainMessage", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *backendServiceClient) WrittenChainMessage(ctx context.Context, in *Envelope, opts ...grpc.CallOption) (*WrittenChainMessageResponse, error) {
+	out := new(WrittenChainMessageResponse)
+	err := c.cc.Invoke(ctx, "/grpc.BackendService/WrittenChainMessage", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // BackendServiceServer is the server API for BackendService service.
 type BackendServiceServer interface {
 	GetPeerInfo(context.Context, *PeerRequest) (*PeerInfoResponse, error)
 	IwantoBePrimary(context.Context, *IwantToBePrimaryRequest) (*IwantToBePrimaryResponse, error)
+	SendChainMessage(context.Context, *Envelope) (*SendChainMessageResponse, error)
+	WrittenChainMessage(context.Context, *Envelope) (*WrittenChainMessageResponse, error)
 }
 
 func RegisterBackendServiceServer(s *grpc.Server, srv BackendServiceServer) {
@@ -306,6 +690,42 @@ func _BackendService_IwantoBePrimary_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _BackendService_SendChainMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Envelope)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BackendServiceServer).SendChainMessage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/grpc.BackendService/SendChainMessage",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BackendServiceServer).SendChainMessage(ctx, req.(*Envelope))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BackendService_WrittenChainMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Envelope)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BackendServiceServer).WrittenChainMessage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/grpc.BackendService/WrittenChainMessage",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BackendServiceServer).WrittenChainMessage(ctx, req.(*Envelope))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _BackendService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "grpc.BackendService",
 	HandlerType: (*BackendServiceServer)(nil),
@@ -318,30 +738,49 @@ var _BackendService_serviceDesc = grpc.ServiceDesc{
 			MethodName: "IwantoBePrimary",
 			Handler:    _BackendService_IwantoBePrimary_Handler,
 		},
+		{
+			MethodName: "SendChainMessage",
+			Handler:    _BackendService_SendChainMessage_Handler,
+		},
+		{
+			MethodName: "WrittenChainMessage",
+			Handler:    _BackendService_WrittenChainMessage_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "backend.proto",
 }
 
-func init() { proto.RegisterFile("backend.proto", fileDescriptor_backend_d3c311b66966ebc3) }
+func init() { proto.RegisterFile("backend.proto", fileDescriptor_backend_7f52c4b3a4b31eb6) }
 
-var fileDescriptor_backend_d3c311b66966ebc3 = []byte{
-	// 267 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x91, 0xbd, 0x4e, 0xc3, 0x30,
-	0x14, 0x85, 0x71, 0x81, 0x12, 0x6e, 0xc4, 0x9f, 0x87, 0x62, 0x45, 0xa2, 0x8a, 0x3c, 0x85, 0x25,
-	0x03, 0x30, 0x31, 0x76, 0xcb, 0x56, 0xb9, 0xbc, 0x80, 0xeb, 0x5c, 0x22, 0x8b, 0xd6, 0x0e, 0xb6,
-	0x0b, 0x82, 0xa7, 0xe1, 0x51, 0x51, 0x93, 0x86, 0x46, 0x42, 0x59, 0x3a, 0x9e, 0xe3, 0xeb, 0xe3,
-	0x73, 0x3f, 0xc3, 0xc5, 0x52, 0xaa, 0x37, 0x34, 0x65, 0x5e, 0x3b, 0x1b, 0x2c, 0x3d, 0xa9, 0x5c,
-	0xad, 0xf8, 0x3d, 0xc4, 0x73, 0x44, 0x27, 0xf0, 0x7d, 0x83, 0x3e, 0xd0, 0x04, 0xa2, 0xca, 0x21,
-	0x06, 0x6d, 0x2a, 0x46, 0x52, 0x92, 0x9d, 0x8b, 0x3f, 0xcd, 0x57, 0x70, 0xbd, 0x1d, 0x2d, 0xcc,
-	0xab, 0x15, 0xe8, 0x6b, 0x6b, 0x3c, 0xd2, 0x14, 0x62, 0x8f, 0x4e, 0xae, 0xf4, 0x37, 0x96, 0x45,
-	0xd9, 0x5c, 0x39, 0x15, 0x7d, 0x8b, 0x4e, 0x60, 0xac, 0x1c, 0x96, 0x3a, 0xb0, 0x51, 0x4a, 0xb2,
-	0x91, 0xd8, 0x29, 0x3a, 0x05, 0x90, 0xeb, 0xa2, 0x76, 0x7a, 0x2d, 0xdd, 0x17, 0x3b, 0x4e, 0x49,
-	0x16, 0x89, 0x9e, 0xc3, 0x17, 0x70, 0x5b, 0x7c, 0x4a, 0x13, 0x5e, 0xec, 0x0c, 0xe7, 0xad, 0xd7,
-	0x95, 0x3c, 0xf8, 0x51, 0xfe, 0x04, 0xec, 0x7f, 0xe8, 0x6e, 0x15, 0x06, 0x67, 0x7e, 0xa3, 0x14,
-	0x7a, 0xdf, 0x24, 0x46, 0xa2, 0x93, 0x0f, 0x3f, 0x04, 0x2e, 0x67, 0x2d, 0xbb, 0x05, 0xba, 0x0f,
-	0xad, 0x90, 0x3e, 0x43, 0x5c, 0x61, 0xe8, 0x70, 0xd0, 0x9b, 0x7c, 0x0b, 0x33, 0xef, 0x91, 0x4c,
-	0x26, 0x7b, 0xab, 0x4f, 0x8c, 0x1f, 0x51, 0x01, 0x57, 0x4d, 0x89, 0x7d, 0x07, 0x7a, 0xd7, 0x0e,
-	0x0f, 0x2c, 0x9c, 0x4c, 0x87, 0x8e, 0xbb, 0xcc, 0xe5, 0xb8, 0xf9, 0xd3, 0xc7, 0xdf, 0x00, 0x00,
-	0x00, 0xff, 0xff, 0x7a, 0xfc, 0xb9, 0xaf, 0xe4, 0x01, 0x00, 0x00,
+var fileDescriptor_backend_7f52c4b3a4b31eb6 = []byte{
+	// 434 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x94, 0xdf, 0x6f, 0xd3, 0x30,
+	0x10, 0xc7, 0xdb, 0x0e, 0xb6, 0xec, 0x02, 0x63, 0xf3, 0xa4, 0x2d, 0x0a, 0x30, 0x15, 0x3f, 0x8d,
+	0x97, 0x20, 0x8d, 0x5f, 0x12, 0x48, 0x3c, 0x14, 0x90, 0x08, 0x12, 0xa2, 0x72, 0x91, 0x78, 0xf6,
+	0x92, 0x23, 0x58, 0xa4, 0x4e, 0xb0, 0xdd, 0xa0, 0xf1, 0x67, 0xf1, 0x17, 0xa2, 0xc4, 0xcb, 0x12,
+	0x96, 0x86, 0x4c, 0x7d, 0xbc, 0x3b, 0xdf, 0xf7, 0xe3, 0xcb, 0xf7, 0x1c, 0xb8, 0x7b, 0xce, 0xa3,
+	0x1f, 0x28, 0xe3, 0x20, 0x57, 0x99, 0xc9, 0xc8, 0xad, 0x44, 0xe5, 0x11, 0x9d, 0x81, 0xf3, 0x5e,
+	0x16, 0x98, 0x66, 0x39, 0x12, 0x0f, 0x76, 0x72, 0x7e, 0x91, 0x66, 0x3c, 0xf6, 0xc6, 0xd3, 0xf1,
+	0xe9, 0x1d, 0x56, 0x87, 0xe4, 0x01, 0xec, 0x6a, 0x91, 0x48, 0x6e, 0x56, 0x0a, 0xbd, 0x49, 0x55,
+	0x6b, 0x12, 0xf4, 0x31, 0xb8, 0x73, 0x44, 0xc5, 0xf0, 0xe7, 0x0a, 0xb5, 0x21, 0x3e, 0x38, 0x89,
+	0x42, 0x34, 0x42, 0x26, 0x95, 0xce, 0x2e, 0xbb, 0x8a, 0x69, 0x0a, 0xfb, 0xe5, 0xd1, 0x50, 0x7e,
+	0xcb, 0x18, 0xea, 0x3c, 0x93, 0x1a, 0xc9, 0x14, 0x5c, 0x8d, 0x8a, 0xa7, 0xe2, 0x37, 0xc6, 0xa1,
+	0x45, 0xdf, 0x66, 0xed, 0x14, 0x39, 0x82, 0xed, 0x48, 0x61, 0x2c, 0x4c, 0xc5, 0x9e, 0xb0, 0xcb,
+	0x88, 0x9c, 0x00, 0xf0, 0x65, 0x98, 0x2b, 0xb1, 0xe4, 0xea, 0xc2, 0xdb, 0x9a, 0x8e, 0x4f, 0x1d,
+	0xd6, 0xca, 0xd0, 0x05, 0x1c, 0x87, 0xbf, 0xb8, 0x34, 0x5f, 0xb2, 0x19, 0xce, 0x6d, 0xae, 0xbe,
+	0xe4, 0xc6, 0x50, 0xfa, 0x0c, 0xbc, 0xae, 0xe8, 0xe5, 0x28, 0x1e, 0xec, 0xe8, 0x55, 0x14, 0xa1,
+	0xd6, 0x95, 0xa2, 0xc3, 0xea, 0x90, 0xbe, 0x00, 0xf2, 0x81, 0xa7, 0xe6, 0x13, 0x6a, 0xcd, 0x13,
+	0x6c, 0x6e, 0xb1, 0xb5, 0xd4, 0xf6, 0x2b, 0xb9, 0x67, 0x7b, 0x41, 0xe9, 0x48, 0x50, 0xdb, 0xc1,
+	0xca, 0x12, 0x7d, 0x02, 0x87, 0xff, 0xf4, 0x0d, 0x82, 0x5e, 0xc3, 0xf1, 0x02, 0x65, 0xfc, 0xf6,
+	0x3b, 0x17, 0xb2, 0x4b, 0x43, 0x59, 0xf4, 0xd1, 0x50, 0x16, 0xe5, 0x6c, 0xdd, 0xe6, 0x41, 0xe4,
+	0x1b, 0xf0, 0xbf, 0x2a, 0x61, 0x0c, 0xca, 0xcd, 0xa8, 0x2f, 0xe1, 0xfe, 0xda, 0xfe, 0x41, 0xf0,
+	0x73, 0x38, 0x98, 0x2b, 0xfc, 0x6c, 0xdb, 0x6e, 0xce, 0x0b, 0x80, 0xb4, 0xdb, 0x86, 0x30, 0x67,
+	0x7f, 0x26, 0xb0, 0x37, 0xb3, 0x6f, 0x67, 0x81, 0xaa, 0x10, 0x11, 0x92, 0x57, 0xe0, 0x26, 0x68,
+	0xea, 0x55, 0x26, 0x07, 0x16, 0xd3, 0x7a, 0x05, 0xfe, 0x51, 0x93, 0x6a, 0x6f, 0x3b, 0x1d, 0x11,
+	0x06, 0xf7, 0xaa, 0x05, 0x6a, 0xf6, 0x87, 0x3c, 0xb4, 0x87, 0x7b, 0x96, 0xd5, 0x3f, 0xe9, 0x2b,
+	0x5f, 0x69, 0xbe, 0x83, 0xfd, 0xeb, 0xc6, 0x91, 0x6b, 0xb3, 0xd7, 0x2a, 0x7d, 0x06, 0xd3, 0x11,
+	0xf9, 0x08, 0x87, 0x6b, 0x8c, 0xe8, 0x08, 0x3d, 0xb2, 0xf1, 0x7f, 0x3c, 0xa3, 0xa3, 0xf3, 0xed,
+	0xea, 0x2f, 0xf3, 0xf4, 0x6f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x3a, 0xd6, 0x7a, 0xdd, 0x76, 0x04,
+	0x00, 0x00,
 }

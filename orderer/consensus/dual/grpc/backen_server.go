@@ -30,6 +30,18 @@ func (s *server) IwantoBePrimary(ctx context.Context, in *IwantToBePrimaryReques
 	return &IwantToBePrimaryResponse{Success: false}, nil
 }
 
+/*func (s *server) SendChainMessage(ctx context.Context, in *pb.Envelope) (*SendChainMessageResponse, error) {
+	var success = false
+	s.oc.preOnChan <- in
+	success = true
+	return &SendChainMessageResponse{Success: success}, nil
+}
+func (s *server) WrittenChainMessage(ctx context.Context, in *pb.Envelope) (*WrittenChainMessageResponse, error) {
+	var success = false
+	s.oc.writtenChan <- in
+	success = true
+	return &WrittenChainMessageResponse{Success: success}, nil
+}*/
 func start(port string) {
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
@@ -37,6 +49,6 @@ func start(port string) {
 	}
 	s := grpc.NewServer()
 	//pb.RegisterHelloServiceServer(s, &server{})
-	RegisterBackendServiceServer(s, &server{})
+	//RegisterBackendServiceServer(s, &server{})
 	s.Serve(lis)
 }
