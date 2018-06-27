@@ -5,6 +5,7 @@ import (
 
 	"github.com/hyperledger/fabric/common/flogging"
 	pb "github.com/hyperledger/fabric/orderer/consensus/dual/grpc"
+	cb "github.com/hyperledger/fabric/protos/common"
 	logging "github.com/op/go-logging"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -21,7 +22,10 @@ func init() {
 	logger = flogging.MustGetLogger(pkgLogID)
 }
 
-type server struct{ oinfo *orderers }
+type server struct {
+	oinfo *orderers
+	oc    orderchain
+}
 
 func (s *server) GetPeerInfo(ctx context.Context, in *pb.PeerRequest) (*pb.PeerInfoResponse, error) {
 	var credit = float32(s.oinfo.credit)
@@ -49,7 +53,7 @@ func start(port string, oinfo *orderers) {
 	}
 	s := grpc.NewServer()
 	//pb.RegisterHelloServiceServer(s, &server{})
-	pb.RegisterBackendServiceServer(s, &server{oinfo})
+	pb.RegisterBackendServiceServer(s, &server{oinfo: oinfo})
 	s.Serve(lis)
 }
 func _client(address string) pb.BackendServiceClient {
@@ -94,4 +98,16 @@ func bePrimary(address string, oinfo *orderers) (*pb.IwantToBePrimaryResponse, e
 		logger.Fatal("could not greet: %v", err)
 	}
 	return r, err
+}
+func (s *server) SendChainMessage(ctx context.Context, in *cb.Envelope) (*pb.SendChainMessageResponse, error) {
+	var success = false
+	//s.oc.preOnChan <- in
+	//success = true
+	return &pb.SendChainMessageResponse{Success: success}, nil
+}
+func (s *server) WrittenChainMessage(ctx context.Context, in *cb.Envelope) (*pb.WrittenChainMessageResponse, error) {
+	var success = false
+	//s.oc.writtenChan <- in
+	//success = true
+	return &pb.WrittenChainMessageResponse{Success: success}, nil
 }
