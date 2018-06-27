@@ -5,6 +5,7 @@ import (
 
 	"github.com/hyperledger/fabric/common/flogging"
 	pb "github.com/hyperledger/fabric/orderer/consensus/dual/grpc"
+	cb "github.com/hyperledger/fabric/protos/common"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -39,13 +40,13 @@ func (s *server) IwantoBePrimary(ctx context.Context, in *pb.IwantToBePrimaryReq
 	}
 	return &pb.IwantToBePrimaryResponse{Success: suc}, nil
 }
-func (s *server) SendChainMessage(ctx context.Context, in *pb.Envelope) (*pb.SendChainMessageResponse, error) {
+func (s *server) SendChainMessage(ctx context.Context, in *cb.Envelope) (*pb.SendChainMessageResponse, error) {
 	var success = false
 	s.oc.preOnChan <- in
 	success = true
 	return &pb.SendChainMessageResponse{Success: success}, nil
 }
-func (s *server) WrittenChainMessage(ctx context.Context, in *pb.Envelope) (*pb.WrittenChainMessageResponse, error) {
+func (s *server) WrittenChainMessage(ctx context.Context, in *cb.Envelope) (*pb.WrittenChainMessageResponse, error) {
 	var success = false
 	s.oc.writtenChan <- in
 	success = true
@@ -74,18 +75,27 @@ func intClient(address string) clients {
 	cl := pb.NewBackendServiceClient(conn)
 	return clients{c: cl}
 }
-func (c *clients) SendChain(in *pb.Envelope) bool {
+func (c *clients) SendChain(in *cb.Envelope) bool {
 	r, err := c.c.SendChainMessage(context.Background(), in)
 	if err != nil {
 		logger.Fatal("could not greet: %v", err)
 	}
 	return r.GetSuccess()
 }
-func (c *clients) WrittenChain(in *pb.Envelope) bool {
+func (c *clients) WrittenChain(in *cb.Envelope) bool {
 	r, err := c.c.WrittenChainMessage(context.Background(), in)
 	if err != nil {
 		logger.Fatal("could not greet: %v", err)
 	}
+	return r.GetSuccess()
+}
+func (c *clients) cBePrimary(oinfo *orderers) bool {
+
+	r, err := c.c.IwantoBePrimary(context.Background(), &pb.IwantToBePrimaryRequest{SeralizedId: int32(oinfo.seralizeID), Credit: float32(oinfo.credit)})
+	if err != nil {
+		logger.Fatal("could not greet: %v", err)
+	}
+
 	return r.GetSuccess()
 }
 

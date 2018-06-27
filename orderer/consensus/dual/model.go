@@ -1,6 +1,8 @@
 package dual
 
-import pb "github.com/hyperledger/fabric/orderer/consensus/dual/grpc"
+import (
+	cb "github.com/hyperledger/fabric/protos/common"
+)
 
 type orderers struct {
 	credit     float64
@@ -11,15 +13,15 @@ type orderers struct {
 	//mockBlockChain string
 }
 type orderchain struct {
-	writtenChan chan *pb.Envelope
-	preOnChan   chan *pb.Envelope
+	writtenChan chan *cb.Envelope
+	preOnChan   chan *cb.Envelope
 	exitChan    chan bool
 }
 
 func newOrderChain() *orderchain {
 	return &orderchain{
-		writtenChan: make(chan *pb.Envelope, 10),
-		preOnChan:   make(chan *pb.Envelope, 10),
+		writtenChan: make(chan *cb.Envelope, 10),
+		preOnChan:   make(chan *cb.Envelope, 10),
 		exitChan:    make(chan bool),
 	}
 }

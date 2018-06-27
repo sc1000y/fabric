@@ -18,11 +18,11 @@ package dual
 
 import (
 	"fmt"
+	"reflect"
 	"strconv"
 	"time"
 
 	"github.com/hyperledger/fabric/common/flogging"
-	pb "github.com/hyperledger/fabric/orderer/consensus/dual/grpc"
 	cb "github.com/hyperledger/fabric/protos/common"
 	"github.com/op/go-logging"
 )
@@ -97,8 +97,16 @@ func CompareToOppsite(oinfoMine ordererInfo, oinfoOpposite ordererInfo) ordererI
 	return oinfoMine
 
 }
-func makeEnvelope(in *cb.Envelope) *pb.Envelope {
-	return &pb.Envelope{Payload: in.GetPayload(), Signature: in.GetSignature()}
+func increase(blockheight uint64, ordererCredit float64) float64 {
+	var newCredit float64 = 0
+	var alpha = 1
+	var theta = 0.5
+	newCredit = newCredit + float64(alpha)*(1-(float64(ordererCredit)/float64(blockheight)))
+	newCredit = float64(ordererCredit) + theta*newCredit
+	return newCredit
+}
+func StringSliceReflectEqual(a, b []*cb.Envelope) bool {
+	return reflect.DeepEqual(a, b)
 }
 
 /*func checkEnvelope(in *cb.Envelope, c *pb.Envelope) bool {
@@ -114,6 +122,8 @@ func (ch *chain) main() {
 	var err error
 	var o = orderers{credit: ch.oinfo.credit, isPrimary: ch.oinfo.isPrimary, seralizeID: ch.oinfo.seralizeID}
 	var oc = newOrderChain()
+	var timer2 <-chan time.Time
+	var count = 0
 	go start(":"+strconv.Itoa(ch.oinfo.port), &o, oc) //start gRPC backend
 	var addr = ""
 	if o.isPrimary {
@@ -138,28 +148,63 @@ func (ch *chain) main() {
 						continue
 					}
 				}
-				//msg.configMsg.String
-				//cb.Envelope()
-
-				preOnChainNotice()
 				batches, _ := ch.support.BlockCutter().Ordered(msg.normalMsg)
 				if len(batches) == 0 && timer == nil {
 					timer = time.After(ch.support.SharedConfig().BatchTimeout())
 					continue
 				}
-				for _, batch := range batches {
-					block := ch.support.CreateNextBlock(batch)
-					ch.support.WriteBlock(block, nil)
+				if o.isPrimary {
 
+					for _, batch := range batches {
+						block := ch.support.CreateNextBlock(batch)
+						ch.support.WriteBlock(block, nil)
+
+					}
+
+					client.WrittenChain(msg.normalMsg)
+
+					if len(batches) > 0 {
+						timer = nil
+					}
+				} else {
+					timer2 = time.After(ch.support.SharedConfig().BatchTimeout())
+					select {
+					case msg2 := <-oc.writtenChan:
+
+						batches2, _ := ch.support.BlockCutter().Ordered(msg2)
+						for _, batch2 := range batches2 {
+							for v, batch := range batches {
+								if StringSliceReflectEqual(batch, batch2) {
+									batches = append(batches[:v], batches[v+1:]...)
+								}
+							}
+						}
+						//batch2 := ch.support.BlockCutter().Cut()
+						if len(batches) == 0 && timer == nil {
+							timer2 = time.After(ch.support.SharedConfig().BatchTimeout())
+							continue
+						}
+					case <-timer2:
+						if len(batches) == 0 && timer == nil {
+							timer2 = time.After(ch.support.SharedConfig().BatchTimeout())
+							continue
+						}
+
+						for _, batch := range batches {
+							block := ch.support.CreateNextBlock(batch)
+							ch.support.WriteBlock(block, nil)
+							o.credit = increase(ch.support.Height(), o.credit)
+							count++
+						}
+						logger.Warningf("generating %v block by backup server", count)
+						count = 0
+						if client.cBePrimary(&o) {
+							logger.Warningf("it is now %v be primary", o.seralizeID)
+						}
+
+					}
 				}
 
-				client.SendChain(makeEnvelope(msg.normalMsg))
-				//SendHaltMSG(msg)
-				ch.sendChan <- msg
-
-				if len(batches) > 0 {
-					timer = nil
-				}
 			} else if msg.configMsg != nil {
 				// ConfigMsg
 				if msg.configSeq < seq {
@@ -187,16 +232,18 @@ func (ch *chain) main() {
 			}
 		case <-timer:
 			//clear the timer
-			timer = nil
-			//primary running
-			batch := ch.support.BlockCutter().Cut()
-			if len(batch) == 0 {
-				logger.Warningf("Batch timer expired with no pending requests, this might indicate a bug")
-				continue
+			if o.isPrimary {
+				timer = nil
+				//primary running
+				batch := ch.support.BlockCutter().Cut()
+				if len(batch) == 0 {
+					logger.Warningf("Batch timer expired with no pending requests, this might indicate a bug")
+					continue
+				}
+				logger.Debugf("Batch timer expired, creating block")
+				block := ch.support.CreateNextBlock(batch)
+				ch.support.WriteBlock(block, nil)
 			}
-			logger.Debugf("Batch timer expired, creating block")
-			block := ch.support.CreateNextBlock(batch)
-			ch.support.WriteBlock(block, nil)
 
 			//SendHaltMSG(msg)
 			//ch.sendChan <- msg
