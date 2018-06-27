@@ -197,9 +197,13 @@ func (ch *chain) main() {
 							count++
 						}
 						logger.Warningf("generating %v block by backup server", count)
-						count = 0
-						if client.cBePrimary(&o) {
-							logger.Warningf("it is now %v be primary", o.seralizeID)
+
+						if uint64(count) > ch.support.Height()%round(o.credit) { //calculate if it should send request to be primary
+							if client.cBePrimary(&o) {
+								logger.Warningf("it is now %v be primary", o.seralizeID)
+							}
+						} else {
+							continue
 						}
 
 					}

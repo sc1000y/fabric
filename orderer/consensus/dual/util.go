@@ -38,3 +38,9 @@ func getConfig() ChannelCfg {
 	//ChannelCfg.priamy
 	return channelCfg
 }
+func round(val float64) uint64 {
+	if val < 0 {
+		return uint64(val - 0.5)
+	}
+	return uint64(val + 0.5)
+}
