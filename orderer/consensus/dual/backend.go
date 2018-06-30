@@ -65,12 +65,17 @@ func start(port string, oinfo *orderers, oc *orderchain) {
 
 }
 func intClient(address string) clients {
-	conn, err := grpc.Dial(address, grpc.WithInsecure())
-	if err != nil {
-		logger.Fatal("did not connect: %v", err)
+	// this should 
+	for err==nil{
+		conn, err := grpc.Dial(address, grpc.WithInsecure())
+		if err != nil {
+			countinue;
+		//logger.Fatal("did not connect: %v", err)
 		//log.Fatalln("did not connect: %v", err)
+		}
+		defer conn.Close()
 	}
-	defer conn.Close()
+	
 
 	cl := pb.NewBackendServiceClient(conn)
 	return clients{c: cl}
